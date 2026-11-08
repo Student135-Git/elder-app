@@ -461,7 +461,7 @@ async function doAuth() {
   if (vMode === 'signup') {
     if (key) return fail('這個名稱已經有人用了。', 'That name is already taken.');
     const us = getUsers();
-    us[name] = { h, points: 0, hours: 0, city: '', jobs: [] };
+    us[name] = { h, points: 0, earned: 0, hours: 0, city: '', jobs: [], created: Date.now() };
     saveUsers(us);
     vset('tc_session', name);
   } else {
@@ -533,6 +533,7 @@ function renderBoard(u) {
         <button type="button" class="field" id="v-city" data-v="sheet" data-w="vcity"><span class="fi" aria-hidden="true">📍</span><span class="fv">${cityLabel(u.city)}</span><span class="chev" aria-hidden="true"></span></button>
         <a class="btn-ghost gap" href="#vol-mine">${L('我的志工紀錄', 'My volunteering')}${open ? `<span class="badge">${open}</span>` : ''}</a>
       </section>
+      ${featureNav()}
       <h2 class="vh">${L('這個鄉鎮的需求', 'Requests in this township')}</h2>
       ${list.length ? list.map((j) => jobCard(j, u)).join('') : `<p class="vempty">${L('目前沒有需求。可以換一個鄉鎮看看。', 'No requests right now. Try another township.')}</p>`}
     </div>`;
@@ -643,6 +644,7 @@ function mineCard(e) {
 
 function finishJob(id) {
   const before = (me() || {}).points || 0;
+  const hadBadges = me() ? badgeIds(me()) : [];
   let gained = 0;
   updateMe((u) => {
     const e = (u.jobs || []).find((x) => x.jobId === id && x.status === 'open');
@@ -651,6 +653,7 @@ function finishJob(id) {
     e.doneAt = Date.now();
     e.points = e.snap.hours * POINTS_PER_HOUR;
     gained = e.points;
+    u.earned = earnedOf(u) + gained; // lifetime total, not reduced by rewards
     u.points = (u.points || 0) + gained;
     u.hours = (u.hours || 0) + e.snap.hours;
   });
@@ -661,7 +664,11 @@ function finishJob(id) {
     chip.classList.add('bump');
     countUp(chip.querySelector('b'), before, before + gained);
   }
-  showToast(L(`謝謝你！+${gained} 點`, `Thank you! +${gained} points`));
+  const fresh = BADGES.filter((b) => badgeIds(me()).includes(b.id) && !hadBadges.includes(b.id));
+  showToast(fresh.length
+    ? L(`謝謝你！+${gained} 點\n新徽章：${fresh.map((b) => b.icon + b.zh).join('、')}`, `Thank you! +${gained} points\nNew badge: ${fresh.map((b) => b.icon + ' ' + b.en).join(', ')}`)
+    : L(`謝謝你！+${gained} 點`, `Thank you! +${gained} points`));
+  shareStats();
 }
 
 async function cancelJob(id) {
@@ -719,7 +726,7 @@ document.addEventListener('click', (e) => {
     case 'mode': vMode = d.m; rerender(); break;
     case 'auth': doAuth(); break;
     case 'signout': vset('tc_session', null); rerender(); break;
-    case 'setcity': pickTown(el, () => { updateMe((u) => { u.city = d.c; }); rerender(); }); break;
+    case 'setcity': pickTown(el, () => { updateMe((u) => { u.city = d.c; }); shareStats(); rerender(); }); break;
     case 'take': takeJob(d.id); break;
     case 'finish': twoTap(el, L('再按一次，確定完成', 'Tap again to confirm'), () => finishJob(d.id)); break;
     case 'cancel': twoTap(el, L('再按一次，確定取消', 'Tap again to cancel'), () => cancelJob(d.id)); break;

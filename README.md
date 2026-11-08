@@ -39,6 +39,13 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 
 - **我需要志工 (elder side):** big-text form: job type (cooking / cleaning / neighbourhood walk), description, Hualien township + address, start time, hours, 1–6 people (− left, ＋ right), how long to keep the post. Expired posts are deleted automatically.
 - **我想當志工 (volunteer side):** sign in, choose your township, see only that township's requests, take a job, tap Finish to earn **30 points per hour**. 中文 / EN toggle.
+- **KindWorld features for volunteers** (`kindness.js`, menu on the 我想當志工 page):
+  - **我的檔案 Profile & history:** hours, points, jobs done, badges, every finished job and redeemed reward.
+  - **徽章 Badges:** 8 badges worked out from what you've done (first job, 3 cooking / cleaning / walks, 10 and 50 hours, 3 townships, 300 points), with progress bars. New ones are announced when you tap Finish.
+  - **兌換禮物 Rewards:** spend points on sample rewards (`VOUCHERS`); two taps to confirm, and you get a code. Spending doesn't lower your lifetime points or rank.
+  - **排行榜 Leaderboard:** ranked by hours, for your township or all of Hualien. With `config.js` filled in, each volunteer's public totals (name, township, hours, points, badge count — never the password) are shared through KindWorld's `legacy_blob` table, so every phone sees everyone.
+  - **證書 Certificates:** Bronze 10 h, Silver 30 h, Gold 50 h, Lotus 100 h (`CERTS`); claim one when you reach the hours.
+  - ⚠ Vouchers and certificates are prototype examples, not real coupons or official documents.
 - **Hualien only:** the place picker lists the 13 townships of 花蓮縣 north to south (`HL_TOWNS` in `volunteer.js`), each with a small north–south marker. Picking one is animated in 3D: tiles rise in like ridges, tilt toward you on hover, and the chosen one lifts and spins forward while the others sink back (switched off with "reduce motion").
 - **Sharing through KindWorld:** fill in `config.js` with KindWorld's Supabase URL and *anon* key, and requests are saved to KindWorld's `missions` table, so every phone sees the same list. Each request is shaped like a KindWorld mission (category Community, region EA), so it also shows in the KindWorld app; people who join there count toward the 1–6 places. Our own fields (job type, address, who signed up) are in `data.elderApp`. The code is in `kindworld.js`. With `config.js` empty, everything stays on this phone, as before.
 - **Still on each phone:** volunteer accounts and points. Demo requests only appear when `config.js` is empty.
@@ -48,7 +55,7 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 
 1. Create a new **public** repository on GitHub (e.g. `elder-app`).
 2. Click **Add file → Upload files** and drag in all files:
-   `index.html`, `styles.css`, `app.js`, `volunteer.js`, `config.js`, `kindworld.js`, `manifest.webmanifest`, `icon.svg`, `README.md`.
+   `index.html`, `styles.css`, `app.js`, `volunteer.js`, `kindness.js`, `config.js`, `kindworld.js`, `manifest.webmanifest`, `icon.svg`, `README.md`.
    Click **Commit changes**.
 3. Go to **Settings → Pages**. Under *Build and deployment*, set
    **Source: Deploy from a branch**, **Branch: `main`**, folder **`/ (root)`**, then **Save**.

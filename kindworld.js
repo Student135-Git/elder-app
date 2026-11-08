@@ -11,6 +11,9 @@
 const kw = (() => {
   const on = Boolean(KINDWORLD.url && KINDWORLD.anonKey);
   const base = on ? KINDWORLD.url.replace(/\/+$/, '') + '/rest/v1/missions' : '';
+  // Volunteer totals for the shared leaderboard go in KindWorld's legacy_blob store.
+  const blob = on ? KINDWORLD.url.replace(/\/+$/, '') + '/rest/v1/legacy_blob' : '';
+  const VOLS = 'elderAppVolunteers';
   const headers = (extra = {}) => ({
     apikey: KINDWORLD.anonKey,
     Authorization: 'Bearer ' + KINDWORLD.anonKey,
@@ -90,6 +93,18 @@ const kw = (() => {
     },
     remove(id) {
       return req(`${base}?doc_id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+    },
+    // Only public totals (name, township, hours, points, badge count) — never the password.
+    saveVolunteer(uid, data) {
+      return req(`${blob}?on_conflict=collection,doc_id`, {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ collection: VOLS, doc_id: uid, data, updated_at: new Date().toISOString() }),
+      });
+    },
+    async listVolunteers() {
+      const rows = await req(`${blob}?select=doc_id,data&collection=eq.${VOLS}`);
+      return (rows || []).map((r) => ({ ...r.data, uid: r.doc_id }));
     },
   };
 })();

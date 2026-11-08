@@ -571,7 +571,7 @@ function parentOf(view) {
   if (view === 'cart') return '#shop';
   if (view === 'give' || view === 'vol') return '#home';
   if (view === 'give-new' || view === 'give-done') return '#give';
-  if (view === 'vol-mine') return '#vol';
+  if (view.startsWith('vol-')) return '#vol'; // my jobs, profile, badges, rewards, leaderboard, certificates
   return '';
 }
 
@@ -587,6 +587,11 @@ function renderView() {
   else if (view === 'give-done') renderGiveDone();
   else if (view === 'vol') renderVol();
   else if (view === 'vol-mine') renderMine();
+  else if (view === 'vol-me') renderProfile();
+  else if (view === 'vol-badges') renderBadges();
+  else if (view === 'vol-shop') renderRewards();
+  else if (view === 'vol-rank') renderRank();
+  else if (view === 'vol-cert') renderCerts();
   else {
     const cat = CATEGORIES.find((c) => c.id === view && c.items);
     if (cat) renderCategory(cat); else renderHome();
