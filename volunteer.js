@@ -3,20 +3,15 @@
 /* =========================================================
    Volunteer matching (Tzu Chi–inspired prototype)
    住 → 我需要志工 (elders post requests)
-      → 我想當志工 (volunteers sign in, pick a city, take jobs, earn points)
-   Data lives in this browser only (localStorage). See README for how to
-   move it to a real server.
+      → 我想當志工 (volunteers sign in, pick a township, take jobs, earn points)
+   Data lives in this browser, or in KindWorld when config.js is filled in.
    ========================================================= */
 
-const TW_CITIES = [
-  ['臺北市', 'Taipei City'], ['新北市', 'New Taipei City'], ['基隆市', 'Keelung City'],
-  ['桃園市', 'Taoyuan City'], ['新竹市', 'Hsinchu City'], ['新竹縣', 'Hsinchu County'],
-  ['苗栗縣', 'Miaoli County'], ['臺中市', 'Taichung City'], ['彰化縣', 'Changhua County'],
-  ['南投縣', 'Nantou County'], ['雲林縣', 'Yunlin County'], ['嘉義市', 'Chiayi City'],
-  ['嘉義縣', 'Chiayi County'], ['臺南市', 'Tainan City'], ['高雄市', 'Kaohsiung City'],
-  ['屏東縣', 'Pingtung County'], ['宜蘭縣', 'Yilan County'], ['花蓮縣', 'Hualien County'],
-  ['臺東縣', 'Taitung County'], ['澎湖縣', 'Penghu County'], ['金門縣', 'Kinmen County'],
-  ['連江縣', 'Lienchiang County (Matsu)'],
+// The 13 townships of 花蓮縣 (Hualien County), north to south.
+const HL_TOWNS = [
+  ['秀林鄉', 'Xiulin'], ['新城鄉', 'Xincheng'], ['花蓮市', 'Hualien City'], ['吉安鄉', "Ji'an"],
+  ['壽豐鄉', 'Shoufeng'], ['鳳林鎮', 'Fenglin'], ['萬榮鄉', 'Wanrong'], ['光復鄉', 'Guangfu'],
+  ['豐濱鄉', 'Fengbin'], ['瑞穗鄉', 'Ruisui'], ['玉里鎮', 'Yuli'], ['卓溪鄉', 'Zhuoxi'], ['富里鄉', 'Fuli'],
 ];
 
 const JOB_TYPES = {
@@ -133,24 +128,27 @@ function fmtDate(ts, lang) {
   try { return new Intl.DateTimeFormat(lang === 'en' ? 'en' : 'zh-TW', { month: 'short', day: 'numeric' }).format(new Date(ts)); }
   catch { return new Date(ts).toLocaleDateString(); }
 }
-const cityLabel = (zh, lang = vlang) => { const c = TW_CITIES.find((x) => x[0] === zh); return c ? (lang === 'en' ? c[1] : c[0]) : zh; };
+const cityLabel = (zh, lang = vlang) => { const c = HL_TOWNS.find((x) => x[0] === zh); return c ? (lang === 'en' ? c[1] : c[0]) : zh; };
+const isTown = (zh) => HL_TOWNS.some((x) => x[0] === zh);
 const hoursText = (h) => L(`${h} 小時`, `${h} hr${h > 1 ? 's' : ''}`);
 
 function seedJobs() {
-  if (vget('tc_seeded', false)) return;
+  if (vget('tc_seeded_hl', false)) return;
   const now = Date.now();
   const mk = (id, types, desc, city, address, hours, start, people, days) => ({
     id, types, desc, city, address, hours, start, people, posted: now,
     date: ymd(now + Math.ceil(days / 2) * DAY_MS), expires: endOfDay(now + Math.ceil(days / 2) * DAY_MS), taken: [], owner: 'demo', demo: true,
   });
+  // Replace the old all-Taiwan examples with Hualien ones.
   saveJobs([
-    mk('demo1', ['cook', 'clean'], '請幫忙煮午餐，順便整理廚房。 Help cook lunch and tidy the kitchen.', '花蓮縣', '中山路 123 號', 3, '10:00', 2, 14),
-    mk('demo2', ['walk'], '陪爺爺在公園慢慢走一圈，他走得比較慢。 A slow walk in the park with Grandpa.', '臺北市', '信義路 45 號', 1, '16:00', 1, 10),
-    mk('demo3', ['clean'], '打掃客廳和浴室。 Clean the living room and bathroom.', '高雄市', '中正路 88 號', 2, '09:30', 3, 20),
-    mk('demo4', ['cook'], '想吃熱的晚餐，請幫忙煮簡單的菜。 A simple hot dinner, please.', '臺中市', '民生路 7 號', 2, '17:00', 2, 12),
-    mk('demo5', ['clean', 'walk'], '整理房間，然後在社區走走。 Tidy the room, then a walk around the neighbourhood.', '臺北市', '和平東路 210 號', 3, '14:00', 4, 25),
+    mk('demo1', ['cook', 'clean'], '請幫忙煮午餐，順便整理廚房。 Help cook lunch and tidy the kitchen.', '花蓮市', '中山路 123 號', 3, '10:00', 2, 14),
+    mk('demo2', ['walk'], '陪爺爺在公園慢慢走一圈，他走得比較慢。 A slow walk in the park with Grandpa.', '吉安鄉', '中央路 45 號', 1, '16:00', 1, 10),
+    mk('demo3', ['clean'], '打掃客廳和浴室。 Clean the living room and bathroom.', '玉里鎮', '中正路 88 號', 2, '09:30', 3, 20),
+    mk('demo4', ['cook'], '想吃熱的晚餐，請幫忙煮簡單的菜。 A simple hot dinner, please.', '新城鄉', '博愛路 7 號', 2, '17:00', 2, 12),
+    mk('demo5', ['clean', 'walk'], '整理房間，然後在社區走走。 Tidy the room, then a walk around the neighbourhood.', '花蓮市', '林森路 210 號', 3, '14:00', 4, 25),
+    ...getJobs().filter((j) => !j.demo),
   ]);
-  vset('tc_seeded', true);
+  vset('tc_seeded_hl', true);
 }
 
 // Posts disappear automatically after their "valid until" day.
@@ -263,7 +261,7 @@ function renderGiveNew() {
       </section>
 
       <section class="vcard">
-        <label class="flabel" for="f-city">${B('縣市', 'City')}</label>
+        <label class="flabel" for="f-city">${B('鄉鎮（花蓮縣）', 'Township (Hualien)')}</label>
         <button type="button" class="field" id="f-city" data-v="sheet" data-w="gcity"><span class="fi" aria-hidden="true">📍</span><span class="fv" id="f-city-v"></span><span class="chev" aria-hidden="true"></span></button>
         <label class="flabel gap" for="f-addr">${B('地址', 'Address')}</label>
         <div class="fwrap"><span class="fi" aria-hidden="true">🏠</span><input class="in" id="f-addr" maxlength="80" autocomplete="street-address" placeholder="路名、門牌號碼 · Street and number"></div>
@@ -340,7 +338,7 @@ let posting = false;
 async function postJob() {
   if (posting) return;
   if (!draft.types.length) return giveError('請選擇需要的幫忙。', 'Please choose the help you need.');
-  if (!draft.city) return giveError('請選擇縣市。', 'Please choose your city.');
+  if (!draft.city) return giveError('請選擇鄉鎮。', 'Please choose your township.');
   if (!draft.date) return giveError('請選擇日期。', 'Please choose the day.');
   if (draft.address.trim().length < 3) return giveError('請填寫地址。', 'Please write your address.');
   const now = Date.now();
@@ -415,7 +413,7 @@ function renderVol() {
   app.className = '';
   const u = me();
   if (!u) return renderSignIn();
-  if (!u.city) return renderCityPick(u);
+  if (!isTown(u.city)) return renderCityPick(u); // also catches old all-Taiwan choices
   renderBoard(u);
 }
 
@@ -476,14 +474,41 @@ async function doAuth() {
 
 function renderCityPick(u) {
   app.innerHTML = `
-    ${vHead(L('你在哪個縣市？', 'Which city are you in?'))}
+    ${vHead(L('你住在花蓮哪裡？', 'Where in Hualien are you?'))}
     <div class="vwrap">
       ${langRow()}
-      <p class="vnote big">${L('我們只會顯示你所在縣市的需求。', 'We only show requests in your city.')}</p>
-      <div class="opts cities">
-        ${TW_CITIES.map(([zh]) => `<button type="button" class="opt" data-v="setcity" data-c="${zh}">${cityLabel(zh)}</button>`).join('')}
-      </div>
+      <p class="vnote big">${L('我們只會顯示你所在鄉鎮的需求。', 'We only show requests in your township.')}</p>
+      ${townGrid(u.city, 'setcity')}
     </div>`;
+}
+
+/* ---------- 3D township picker (花蓮縣, north to south) ---------- */
+function townGrid(current, act) {
+  const last = HL_TOWNS.length - 1;
+  return `
+    <p class="towns-axis" aria-hidden="true"><span>⬆ ${L('北', 'North')}</span><span>${L('花蓮縣', 'Hualien County')}</span><span>${L('南', 'South')} ⬇</span></p>
+    <div class="towns" role="group" aria-label="${L('選擇鄉鎮', 'Choose township')}">
+      ${HL_TOWNS.map(([zh, en], i) => `
+        <button type="button" class="town" data-v="${act}" data-c="${zh}" aria-pressed="${zh === current}" style="--i:${i}">
+          <span class="town-face">
+            <span class="town-loc" aria-hidden="true"><i style="--y:${Math.round((i / last) * 100)}%"></i></span>
+            <span class="town-name"><span>${zh}</span><span class="en" lang="en">${en}</span></span>
+            <span class="town-ok" aria-hidden="true">✓</span>
+          </span>
+        </button>`).join('')}
+    </div>`;
+}
+
+// The chosen tile lifts and spins toward you, the rest sink back; then `done` runs.
+function pickTown(btn, done) {
+  const grid = btn.closest('.towns');
+  if (grid.classList.contains('picking')) return;
+  grid.querySelectorAll('.town').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+  say(btn.dataset.c);
+  if (reduceMotion()) { done(); return; }
+  grid.classList.add('picking');
+  btn.classList.add('picked');
+  setTimeout(done, 650);
 }
 
 function ptsChip(u) {
@@ -504,12 +529,12 @@ function renderBoard(u) {
       </div>
       ${langRow(`<button type="button" class="btn-ghost sm" data-v="signout">${L('登出', 'Sign out')}</button>`)}
       <section class="vcard">
-        <label class="flabel" for="v-city">${L('你的縣市', 'Your city')}</label>
+        <label class="flabel" for="v-city">${L('你的鄉鎮（花蓮縣）', 'Your township (Hualien)')}</label>
         <button type="button" class="field" id="v-city" data-v="sheet" data-w="vcity"><span class="fi" aria-hidden="true">📍</span><span class="fv">${cityLabel(u.city)}</span><span class="chev" aria-hidden="true"></span></button>
         <a class="btn-ghost gap" href="#vol-mine">${L('我的志工紀錄', 'My volunteering')}${open ? `<span class="badge">${open}</span>` : ''}</a>
       </section>
-      <h2 class="vh">${L('這個縣市的需求', 'Requests in this city')}</h2>
-      ${list.length ? list.map((j) => jobCard(j, u)).join('') : `<p class="vempty">${L('目前沒有需求。可以換一個縣市看看。', 'No requests right now. Try another city.')}</p>`}
+      <h2 class="vh">${L('這個鄉鎮的需求', 'Requests in this township')}</h2>
+      ${list.length ? list.map((j) => jobCard(j, u)).join('') : `<p class="vempty">${L('目前沒有需求。可以換一個鄉鎮看看。', 'No requests right now. Try another township.')}</p>`}
     </div>`;
 }
 
@@ -694,7 +719,7 @@ document.addEventListener('click', (e) => {
     case 'mode': vMode = d.m; rerender(); break;
     case 'auth': doAuth(); break;
     case 'signout': vset('tc_session', null); rerender(); break;
-    case 'setcity': updateMe((u) => { u.city = d.c; }); rerender(); break;
+    case 'setcity': pickTown(el, () => { updateMe((u) => { u.city = d.c; }); rerender(); }); break;
     case 'take': takeJob(d.id); break;
     case 'finish': twoTap(el, L('再按一次，確定完成', 'Tap again to confirm'), () => finishJob(d.id)); break;
     case 'cancel': twoTap(el, L('再按一次，確定取消', 'Tap again to cancel'), () => cancelJob(d.id)); break;
@@ -723,14 +748,14 @@ function closeSheet() {
   document.body.classList.remove('sheet-open');
   setTimeout(() => el.remove(), 260);
 }
-function openSheet(title, options, current, onPick) {
+function openTownSheet(title, current, onPick) {
   closeSheet();
   const el = document.createElement('div');
   el.className = 'sheet-back';
   el.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
     <div class="grab" aria-hidden="true"></div>
     <div class="sheet-head"><h2>${title}</h2><button type="button" class="sheet-x" data-v="sheetclose" aria-label="關閉 Close">✕</button></div>
-    <div class="sheet-grid">${options.map(([v, label]) => `<button type="button" class="opt" data-v="sheetpick" data-val="${esc(v)}" aria-pressed="${v === current}">${label}</button>`).join('')}</div>
+    <div class="sheet-body">${townGrid(current, 'sheetpick')}</div>
   </div>`;
   el._pick = onPick;
   document.body.appendChild(el);
@@ -749,15 +774,18 @@ document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-v]');
   if (!el) return;
   if (el.dataset.v === 'sheetclose') closeSheet();
-  else if (el.dataset.v === 'sheetpick') { const f = sheetEl._pick; const v = el.dataset.val; closeSheet(); f(v); }
+  else if (el.dataset.v === 'sheetpick') {
+    const f = sheetEl._pick;
+    pickTown(el, () => { closeSheet(); f(el.dataset.c); });
+  }
 });
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-v="sheet"]');
   if (!el) return;
   if (el.dataset.w === 'gcity') {
-    openSheet('縣市 · City', TW_CITIES.map(([zh, en]) => [zh, `${zh}<span class="en" lang="en"> ${en}</span>`]), draft.city, (v) => { draft.city = v; syncDraft(); });
+    openTownSheet('鄉鎮 · Township', draft.city, (v) => { draft.city = v; syncDraft(); });
   } else if (el.dataset.w === 'vcity') {
     const u = me();
-    openSheet(L('選擇縣市', 'Choose city'), TW_CITIES.map(([zh]) => [zh, cityLabel(zh)]), u && u.city, (v) => { updateMe((x) => { x.city = v; }); rerender(); });
+    openTownSheet(L('選擇鄉鎮', 'Choose township'), u && u.city, (v) => { updateMe((x) => { x.city = v; }); rerender(); });
   }
 });

@@ -37,8 +37,9 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 
 ### 住 Live / Reside — volunteer matching (Tzu Chi–inspired theme)
 
-- **我需要志工 (elder side):** big-text form: job type (cooking / cleaning / neighbourhood walk), description, Taiwan city + address, start time, hours, 1–6 people (− left, ＋ right), how long to keep the post. Expired posts are deleted automatically.
-- **我想當志工 (volunteer side):** sign in, choose city, see only that city's requests, take a job, tap Finish to earn **30 points per hour**. 中文 / EN toggle.
+- **我需要志工 (elder side):** big-text form: job type (cooking / cleaning / neighbourhood walk), description, Hualien township + address, start time, hours, 1–6 people (− left, ＋ right), how long to keep the post. Expired posts are deleted automatically.
+- **我想當志工 (volunteer side):** sign in, choose your township, see only that township's requests, take a job, tap Finish to earn **30 points per hour**. 中文 / EN toggle.
+- **Hualien only:** the place picker lists the 13 townships of 花蓮縣 north to south (`HL_TOWNS` in `volunteer.js`), each with a small north–south marker. Picking one is animated in 3D: tiles rise in like ridges, tilt toward you on hover, and the chosen one lifts and spins forward while the others sink back (switched off with "reduce motion").
 - **Sharing through KindWorld:** fill in `config.js` with KindWorld's Supabase URL and *anon* key, and requests are saved to KindWorld's `missions` table, so every phone sees the same list. Each request is shaped like a KindWorld mission (category Community, region EA), so it also shows in the KindWorld app; people who join there count toward the 1–6 places. Our own fields (job type, address, who signed up) are in `data.elderApp`. The code is in `kindworld.js`. With `config.js` empty, everything stays on this phone, as before.
 - **Still on each phone:** volunteer accounts and points. Demo requests only appear when `config.js` is empty.
 - **Privacy note:** KindWorld's database currently lets anyone with the public key read and change missions, which includes elders' addresses. Fine for a class demo; lock it down before real use. Lotus is a simple original drawing, not Tzu Chi's logo.

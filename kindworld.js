@@ -40,7 +40,7 @@ const kw = (() => {
       id: Number(j.id),
       title: `${zh} ${en}・${j.city}`,
       description: j.desc || `${zh} ${en}`,
-      location: `${j.city} ${cityLabel(j.city, 'en')}`, // city only; the address stays in elderApp
+      location: `花蓮縣${j.city} ${cityLabel(j.city, 'en')}, Hualien`, // township only; the address stays in elderApp
       date: j.date,
       startTime: j.start,
       endTime: endTime(j.start, j.hours),
