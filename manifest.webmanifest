@@ -1,0 +1,15 @@
+{
+  "name": "生活助手",
+  "short_name": "生活助手",
+  "description": "A simple, large-button daily-life helper for older adults.",
+  "lang": "zh-Hant-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

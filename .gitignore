@@ -1,0 +1,6 @@
+# Working files from building and testing — not part of the app
+app/
+elder-app-backup/
+kindworld/
+mock.js
+serve.js
