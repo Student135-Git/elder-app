@@ -62,7 +62,7 @@ const kw = (() => {
       registrationDeadline: new Date(j.expires).toISOString(),
       source: 'elder-app',
       elderApp: {
-        types: j.types, desc: j.desc, city: j.city, address: j.address, hours: j.hours, start: j.start,
+        types: j.types, desc: j.desc, city: j.city, address: j.address, lat: j.lat ?? null, lng: j.lng ?? null, hours: j.hours, start: j.start,
         people: j.people, date: j.date, posted: j.posted, expires: j.expires, owner: j.owner, taken: j.taken,
       },
     };

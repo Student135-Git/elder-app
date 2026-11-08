@@ -605,9 +605,15 @@ function route(dir = 'fwd') {
   if (!booted || reduceMotion()) { booted = true; renderView(); return; }
   document.documentElement.dataset.nav = dir;
   if (document.startViewTransition) {
-    const t = document.startViewTransition(renderView);
+    // The animation waits for the screen to draw. If it hasn't started soon
+    // (app in the background, a paused screen), show the new page without it.
+    let shown = false;
+    const show = () => { if (!shown) { shown = true; renderView(); } };
+    const t = document.startViewTransition(show);
+    setTimeout(() => { if (!shown) { show(); t.skipTransition(); } }, 400);
     // A new page change can cut the animation short; the page still renders, so ignore that.
     t.ready.catch(() => {});
+    t.updateCallbackDone.catch(() => {});
     t.finished.catch(() => {});
   } else {
     renderView();

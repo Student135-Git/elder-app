@@ -699,3 +699,16 @@ body.sheet-open { overflow: hidden; }
 /* Information, not an error: same box, calmer colours. */
 .local-note { background: color-mix(in srgb, #F6E3A6 55%, var(--surface)); color: #5C4300; font-size: .95rem; }
 @media (prefers-color-scheme: dark) { .local-note { background: color-mix(in srgb, #F6E3A6 18%, var(--surface)); color: #F6E3A6; } }
+
+/* ============ Google map under the address box ============ */
+.addr-box { display: grid; gap: .4rem; }
+.addr-map {
+  position: relative; height: clamp(14rem, 38vh, 20rem); overflow: hidden;
+  border-radius: 1rem; border: 1.5px solid var(--line-strong); background: var(--surface-2);
+}
+.addr-frame, .addr-live { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.addr-map.is-loading::after { content: "地圖載入中… Loading map…"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-weight: 600; }
+.addr-box .vnote { font-size: .9rem; }
+.addr-open { justify-self: start; color: var(--vb); font-weight: 700; text-decoration: none; padding: .3rem 0; }
+.addr-open:hover { text-decoration: underline; }
+.nav-btn { border-color: var(--vb); color: var(--vb); font-weight: 700; }

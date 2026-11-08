@@ -44,8 +44,9 @@ let lastPosted = null;
 const vmem = {};
 
 function newDraft() {
-  return { types: [], desc: '', city: '', address: '', date: '', hours: 2, start: '09:00', people: 1, days: 7 };
+  return { types: [], desc: '', city: '', address: '', lat: null, lng: null, date: '', hours: 2, start: '09:00', people: 1, days: 7 };
 }
+let formMap = null; // Google map under the address box
 const qs = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const B = (zh, en) => `<span class="bi"><span>${zh}</span><span class="en" lang="en">${en}</span></span>`;
@@ -225,6 +226,7 @@ function giveCard(j) {
         <li><span aria-hidden="true">👥</span>${B(`已報名 ${signedUp(j)} / ${j.people} 人`, `${signedUp(j)} of ${j.people} signed up`)}</li>
         <li><span aria-hidden="true">⏳</span>${B(`保留到 ${fmtDate(j.expires, 'zh')}，之後自動刪除`, `Kept until ${fmtDate(j.expires, 'en')}, then deleted automatically`)}</li>
       </ul>
+      <a class="btn-ghost" href="${addrMap.searchURL(j.lat != null ? `${j.lat},${j.lng}` : addrMap.full(j.city, j.address))}" target="_blank" rel="noopener">${B('在 Google 地圖看位置', 'See it on Google Maps')} ↗</a>
       <button type="button" class="btn-ghost danger" data-v="del" data-id="${j.id}">${B('刪除這篇貼文', 'Delete this post')}</button>
     </article>`;
 }
@@ -273,6 +275,11 @@ function renderGiveNew() {
         <button type="button" class="field" id="f-city" data-v="sheet" data-w="gcity"><span class="fi" aria-hidden="true">📍</span><span class="fv" id="f-city-v"></span><span class="chev" aria-hidden="true"></span></button>
         <label class="flabel gap" for="f-addr">${B('地址', 'Address')}</label>
         <div class="fwrap"><span class="fi" aria-hidden="true">🏠</span><input class="in" id="f-addr" maxlength="80" autocomplete="street-address" placeholder="路名、門牌號碼 · Street and number"></div>
+        <div class="addr-box">
+          <div class="addr-map" id="f-map"></div>
+          <p class="vnote addr-tip" id="f-map-tip"></p>
+          <a class="addr-open" href="#" target="_blank" rel="noopener">${B('在 Google 地圖打開', 'Open in Google Maps')} ↗</a>
+        </div>
       </section>
 
       <section class="vcard">
@@ -305,7 +312,26 @@ function renderGiveNew() {
   qs('#f-addr').value = draft.address;
   qs('#f-start').value = draft.start;
   qs('#f-date').value = draft.date;
+  formMap = addrMap.mount(qs('#f-map'), { town: draft.city, address: draft.address, lat: draft.lat, lng: draft.lng }, {
+    // Pin moved by hand: fill in the address (and township, if it changed).
+    onPin(town, address, ll) {
+      draft.lat = ll.lat; draft.lng = ll.lng;
+      if (town && town !== draft.city) { draft.city = town; syncDraft(); formMap.adoptTown(town); }
+      if (address) { draft.address = address; qs('#f-addr').value = address; }
+      showToast('已用圖釘位置填好地址\nAddress filled in from the pin');
+    },
+    onFound(ll) { draft.lat = ll.lat; draft.lng = ll.lng; },
+  });
   syncDraft();
+}
+
+// Township picked → the map jumps straight to it.
+function setDraftTown(town) {
+  if (town === draft.city) return;
+  draft.city = town;
+  draft.lat = draft.lng = null;
+  syncDraft();
+  if (formMap) formMap.setTown(town);
 }
 
 function syncDraft() {
@@ -354,6 +380,7 @@ async function postJob() {
     id: String(now), // numeric, like KindWorld mission ids
     types: [...draft.types], desc: draft.desc.trim(), city: draft.city, address: draft.address.trim(),
     hours: draft.hours, start: draft.start, people: draft.people, date: draft.date,
+    lat: draft.lat, lng: draft.lng, // exact spot when Google found it or a pin was placed
     posted: now, expires: keepUntil(draft), taken: [], owner: sessionName(),
   };
   posting = true;
@@ -630,7 +657,7 @@ function addMyJob(j) {
     us.jobs = us.jobs || [];
     us.jobs.push({
       jobId: j.id, status: 'open', takenAt: Date.now(),
-      snap: { date: j.date, types: j.types, desc: j.desc, city: j.city, address: j.address, hours: j.hours, start: j.start, expires: j.expires },
+      snap: { date: j.date, types: j.types, desc: j.desc, city: j.city, address: j.address, lat: j.lat, lng: j.lng, hours: j.hours, start: j.start, expires: j.expires },
     });
   });
   showToast(L('報名成功！\n地址在「我的志工紀錄」', 'Signed up!\nSee the address in My volunteering'));
@@ -675,6 +702,7 @@ function mineCard(e) {
         <li><span aria-hidden="true">📅</span>${s.date ? fmtDate(dateEnd(s.date), vlang) : ''} · ${s.start} · ${hoursText(s.hours)}</li>
         <li><span aria-hidden="true">⭐</span>+${s.hours * POINTS_PER_HOUR} ${L('點', 'points')}</li>
       </ul>
+      <a class="btn-ghost nav-btn" href="${navURL(s)}" target="_blank" rel="noopener" data-say="${L('導航', 'Navigate')}">🧭 ${L('用 Google 地圖導航', 'Navigate with Google Maps')}</a>
       <button type="button" class="btn-primary" data-v="finish" data-id="${e.jobId}">${L('完成', 'Finish')} +${s.hours * POINTS_PER_HOUR}</button>
       <button type="button" class="btn-ghost danger" data-v="cancel" data-id="${e.jobId}">${L('取消報名', 'Cancel sign-up')}</button>
     </article>`;
@@ -774,7 +802,11 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('input', (e) => {
   if (e.target.id === 'f-desc') draft.desc = e.target.value;
-  if (e.target.id === 'f-addr') draft.address = e.target.value;
+  if (e.target.id === 'f-addr') {
+    draft.address = e.target.value;
+    draft.lat = draft.lng = null; // a typed address replaces an old pin
+    if (formMap) formMap.setAddress(draft.address);
+  }
 });
 document.addEventListener('change', (e) => {
   if (e.target.id === 'f-start') draft.start = e.target.value;
@@ -827,7 +859,7 @@ document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-v="sheet"]');
   if (!el) return;
   if (el.dataset.w === 'gcity') {
-    openTownSheet('鄉鎮 · Township', draft.city, (v) => { draft.city = v; syncDraft(); });
+    openTownSheet('鄉鎮 · Township', draft.city, setDraftTown);
   } else if (el.dataset.w === 'vcity') {
     const u = me();
     openTownSheet(L('選擇鄉鎮', 'Choose township'), u && u.city, (v) => { updateMe((x) => { x.city = v; }); rerender(); });

@@ -47,6 +47,10 @@ Motion: pages slide and fade between screens (direction follows forward / back),
   - **證書 Certificates:** Bronze 10 h, Silver 30 h, Gold 50 h, Lotus 100 h (`CERTS`); claim one when you reach the hours.
   - ⚠ Vouchers and certificates are prototype examples, not real coupons or official documents.
 - **3D map of Hualien:** above the township buttons, a 3D map (`hualien-map.js`, three.js 0.160 from jsDelivr) shows all 13 townships as raised blocks with their real borders (`hualien-map-data.js`, generated from the Ministry of the Interior's 鄉鎮市區界線 via `taiwan-atlas`, MIT). Colours follow the landform: green for the Central Mountain Range, sand for the East Rift Valley, aqua for the coast. Tap a township on the map or its button — pointing at a button lifts it on the map with a name tag; picking one turns it blue, raises it and zooms in. Drag sideways to turn the map. Phones without 3D get the same map flat and tilted.
+- **Google map for the address** (`address-map.js`): under the address box. Picking a township jumps the map straight to it; typing the address moves it to that spot (after a short pause). "在 Google 地圖打開" opens the same place in Google Maps.
+  - **No key (default):** Google's embeddable map — works right away.
+  - **With `GOOGLE_MAPS.key` in `config.js`:** the Maps JavaScript API — the township is outlined, and you can drag the pin or tap the map to fill in the address (and township). Enable "Maps JavaScript API" and "Geocoding API" in Google Cloud, and restrict the key to `https://student135-git.github.io/*`. If Google rejects the key, the app falls back to the no-key map.
+  - The exact spot (when known) is saved with the request, so volunteers get a **🧭 用 Google 地圖導航** button that opens directions, and elders get **在 Google 地圖看位置**.
 - **我需要志工 lists only the signed-in account's posts.** Volunteers see every request under 我想當志工. Until `config.js` is filled in, the app says on these pages that posts stay on this phone.
 - **Hualien only:** the place picker lists the 13 townships of 花蓮縣 north to south (`HL_TOWNS` in `volunteer.js`), each with a small north–south marker. Picking one is animated in 3D: tiles rise in like ridges, tilt toward you on hover, and the chosen one lifts and spins forward while the others sink back (switched off with "reduce motion").
 - **Sharing through KindWorld:** fill in `config.js` with KindWorld's Supabase URL and *anon* key, and requests are saved to KindWorld's `missions` table, so every phone sees the same list. Each request is shaped like a KindWorld mission (category Community, region EA), so it also shows in the KindWorld app; people who join there count toward the 1–6 places. Our own fields (job type, address, who signed up) are in `data.elderApp`. The code is in `kindworld.js`. With `config.js` empty, everything stays on this phone, as before.
@@ -57,7 +61,7 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 
 1. Create a new **public** repository on GitHub (e.g. `elder-app`).
 2. Click **Add file → Upload files** and drag in all files:
-   `index.html`, `styles.css`, `app.js`, `volunteer.js`, `kindness.js`, `hualien-map.js`, `hualien-map-data.js`, `config.js`, `kindworld.js`, `manifest.webmanifest`, `icon.svg`, `README.md`.
+   `index.html`, `styles.css`, `app.js`, `volunteer.js`, `kindness.js`, `hualien-map.js`, `hualien-map-data.js`, `address-map.js`, `config.js`, `kindworld.js`, `manifest.webmanifest`, `icon.svg`, `README.md`.
    Click **Commit changes**.
 3. Go to **Settings → Pages**. Under *Build and deployment*, set
    **Source: Deploy from a branch**, **Branch: `main`**, folder **`/ (root)`**, then **Save**.
