@@ -650,3 +650,52 @@ body.sheet-open { overflow: hidden; }
 /* Icon above the label so 4-character names fit two-across on small phones. */
 .fnav { flex-direction: column; justify-content: center; gap: .35rem; min-height: 5.2rem; text-align: center; }
 .fnavs > .fnav:last-child:nth-child(odd) { flex-direction: row; min-height: 4.2rem; }
+
+/* ============ 3D Hualien map (township picker) ============ */
+.picker { display: grid; gap: .6rem; }
+.hl-map {
+  position: relative; height: clamp(18rem, 50vh, 26rem); max-width: 100%; overflow: hidden;
+  border-radius: 1.2rem; border: 1px solid var(--glass-edge, var(--line));
+  /* sea to the east, mountains to the west */
+  background:
+    radial-gradient(120% 90% at 100% 50%, color-mix(in srgb, var(--vb) 22%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 70%, transparent), color-mix(in srgb, var(--vb) 8%, var(--surface)));
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+}
+.hl-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; animation: hl-fade .5s var(--ease) both; }
+.hl-map.is-3d .hl-flat { display: none; }
+@keyframes hl-fade { from { opacity: 0; } }
+
+/* Flat fallback: the same outlines, tilted back so it still reads as a 3D table map. */
+.hl-flat { position: absolute; inset: 6% 8%; width: 84%; height: 88%; overflow: visible; transform: perspective(700px) rotateX(32deg); transform-origin: 50% 70%; }
+.hl-flat path {
+  fill: var(--fill); stroke: #fff; stroke-width: .35; stroke-linejoin: round; cursor: pointer;
+  filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--vb) 45%, transparent));
+  transition: fill .25s, transform .3s var(--ease); transform-box: fill-box; transform-origin: center;
+  animation: hl-path-in .5s var(--ease) backwards; animation-delay: calc(var(--i) * 50ms);
+}
+.hl-flat path.hover { fill: color-mix(in srgb, var(--fill) 60%, #fff); }
+.hl-flat path.on { fill: var(--vb); transform: translateY(-1.5px); }
+@keyframes hl-path-in { from { opacity: 0; transform: translateY(6px); } }
+
+.hl-tag {
+  position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; padding: .3rem .7rem; border-radius: .7rem;
+  background: var(--ink); color: var(--bg); font-size: .95rem; line-height: 1.2; white-space: nowrap;
+  opacity: 0; transition: opacity .2s; box-shadow: 0 6px 16px -8px rgba(0,0,0,.5);
+}
+.hl-tag span { font-size: .75rem; font-weight: 500; opacity: .8; }
+.hl-tag.show { opacity: 1; }
+.hl-tag.sel { background: var(--vb); color: #fff; }
+.hl-tag::after { content: ""; position: absolute; bottom: -5px; left: 50%; margin-left: -5px; border: 5px solid transparent; border-bottom: 0; border-top-color: var(--ink); }
+.hl-tag.sel::after { border-top-color: var(--vb); }
+
+.hl-hint, .hl-sea { position: absolute; z-index: 1; pointer-events: none; color: var(--muted); font-size: .85rem; font-weight: 600; }
+.hl-hint { left: .8rem; top: .6rem; padding: .15rem .6rem; border-radius: 99px; background: color-mix(in srgb, var(--surface) 80%, transparent); }
+.hl-sea { right: .9rem; top: 30%; color: color-mix(in srgb, var(--vb) 70%, var(--muted)); letter-spacing: .15em; writing-mode: vertical-rl; }
+.hl-legend { position: absolute; z-index: 1; right: .7rem; bottom: .6rem; display: flex; flex-direction: column; gap: .2rem; padding: .35rem .6rem; border-radius: .7rem; background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--muted); font-size: .8rem; font-weight: 600; pointer-events: none; }
+.hl-legend span { display: flex; align-items: center; gap: .4rem; }
+.hl-legend i { width: .75rem; height: .75rem; border-radius: .2rem; background: var(--k); box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }
+/* Information, not an error: same box, calmer colours. */
+.local-note { background: color-mix(in srgb, #F6E3A6 55%, var(--surface)); color: #5C4300; font-size: .95rem; }
+@media (prefers-color-scheme: dark) { .local-note { background: color-mix(in srgb, #F6E3A6 18%, var(--surface)); color: #F6E3A6; } }

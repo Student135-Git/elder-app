@@ -200,9 +200,17 @@ function renderGive() {
     <div class="vwrap">
       <div class="vrow"><p class="vhi">${esc(sessionName())}</p><button type="button" class="btn-ghost sm" data-v="signout">${B('登出', 'Sign out')}</button></div>
       <a class="btn-primary" href="#give-new" data-say="發佈新的需求"><span class="plus" aria-hidden="true">＋</span>${B('發佈新的志工需求', 'Post a new request')}</a>
-      <h2 class="vh">${B('我的貼文', 'My posts')}</h2>
-      ${mine.length ? mine.map(giveCard).join('') : `<p class="vempty">${B('還沒有貼文', 'No posts yet')}</p>`}
+      <h2 class="vh">${B(`${esc(sessionName())} 的貼文`, `Posts by ${esc(sessionName())}`)}</h2>
+      <p class="vnote">${B('這裡只列出這個帳號發佈的需求。志工會在「我想當志工」看到所有需求。', 'Only this account’s requests are listed here. Volunteers see every request under “I want to volunteer”.')}</p>
+      ${shareNote()}
+      ${mine.length ? mine.map(giveCard).join('') : `<p class="vempty">${B('這個帳號還沒有貼文', 'This account has no posts yet')}</p>`}
     </div>`;
+}
+
+// Without KindWorld, posts never leave this phone — say so plainly.
+function shareNote() {
+  if (kw.on) return '';
+  return `<p class="ferr local-note">${B('目前只存在這支手機：還沒連上 KindWorld，所以其他手機看不到這些需求。', 'Saved on this phone only: not connected to KindWorld yet, so other phones can’t see these requests.')}</p>`;
 }
 
 function giveCard(j) {
@@ -380,6 +388,7 @@ function renderGiveDone() {
           <li><span aria-hidden="true">⏳</span>${B(`保留到 ${fmtDate(j.expires, 'zh')}`, `Kept until ${fmtDate(j.expires, 'en')}`)}</li>
         </ul>
       </section>
+      ${shareNote()}
       <a class="btn-primary" href="#give" data-say="看我的貼文">${B('看我的貼文', 'See my posts')}</a>
     </div>`;
   say('已發佈');
@@ -485,7 +494,16 @@ function renderCityPick(u) {
 /* ---------- 3D township picker (花蓮縣, north to south) ---------- */
 function townGrid(current, act) {
   const last = HL_TOWNS.length - 1;
-  return `
+  return `<div class="picker">
+    <div class="hl-map" data-current="${current || ''}">
+      <span class="hl-hint" aria-hidden="true">${L('點地圖或下面的按鈕', 'Tap the map or a button below')}</span>
+      <span class="hl-sea" aria-hidden="true">${L('太平洋', 'Pacific')}</span>
+      <span class="hl-legend" aria-hidden="true">
+        <span><i style="--k:#93C29A"></i>${L('山地', 'Mountains')}</span>
+        <span><i style="--k:#E9D8A9"></i>${L('縱谷', 'Rift valley')}</span>
+        <span><i style="--k:#8CCBD8"></i>${L('海岸', 'Coast')}</span>
+      </span>
+    </div>
     <p class="towns-axis" aria-hidden="true"><span>⬆ ${L('北', 'North')}</span><span>${L('花蓮縣', 'Hualien County')}</span><span>${L('南', 'South')} ⬇</span></p>
     <div class="towns" role="group" aria-label="${L('選擇鄉鎮', 'Choose township')}">
       ${HL_TOWNS.map(([zh, en], i) => `
@@ -496,8 +514,25 @@ function townGrid(current, act) {
             <span class="town-ok" aria-hidden="true">✓</span>
           </span>
         </button>`).join('')}
-    </div>`;
+    </div>
+  </div>`;
 }
+
+const pickerMap = (el) => { const m = el.closest('.picker')?.querySelector('.hl-map'); return m && m._map; };
+
+// Pointing at a township button lights it up on the map too.
+document.addEventListener('pointerover', (e) => {
+  const t = e.target.closest('.town');
+  if (t) pickerMap(t)?.preview(t.dataset.c);
+});
+document.addEventListener('pointerout', (e) => {
+  const t = e.target.closest('.town');
+  if (t && !t.contains(e.relatedTarget)) pickerMap(t)?.preview(null);
+});
+document.addEventListener('focusin', (e) => {
+  const t = e.target.closest('.town');
+  if (t) pickerMap(t)?.preview(t.dataset.c);
+});
 
 // The chosen tile lifts and spins toward you, the rest sink back; then `done` runs.
 function pickTown(btn, done) {
@@ -505,10 +540,12 @@ function pickTown(btn, done) {
   if (grid.classList.contains('picking')) return;
   grid.querySelectorAll('.town').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
   say(btn.dataset.c);
+  const map = pickerMap(btn);
+  if (map) map.pick(btn.dataset.c);
   if (reduceMotion()) { done(); return; }
   grid.classList.add('picking');
   btn.classList.add('picked');
-  setTimeout(done, 650);
+  setTimeout(done, map ? 1000 : 650); // a little longer so the map can lift the township
 }
 
 function ptsChip(u) {
@@ -535,6 +572,7 @@ function renderBoard(u) {
       </section>
       ${featureNav()}
       <h2 class="vh">${L('這個鄉鎮的需求', 'Requests in this township')}</h2>
+      ${shareNote()}
       ${list.length ? list.map((j) => jobCard(j, u)).join('') : `<p class="vempty">${L('目前沒有需求。可以換一個鄉鎮看看。', 'No requests right now. Try another township.')}</p>`}
     </div>`;
 }
@@ -769,8 +807,7 @@ function openTownSheet(title, current, onPick) {
   document.body.classList.add('sheet-open');
   sheetEl = el;
   requestAnimationFrame(() => el.classList.add('open'));
-  const cur = el.querySelector('[aria-pressed="true"]');
-  if (cur) cur.scrollIntoView({ block: 'center' });
+  // Open at the top so the map is in view; it already shows the current township.
 }
 window.addEventListener('hashchange', closeSheet);
 window.addEventListener('popstate', closeSheet);

@@ -605,7 +605,10 @@ function route(dir = 'fwd') {
   if (!booted || reduceMotion()) { booted = true; renderView(); return; }
   document.documentElement.dataset.nav = dir;
   if (document.startViewTransition) {
-    document.startViewTransition(renderView);
+    const t = document.startViewTransition(renderView);
+    // A new page change can cut the animation short; the page still renders, so ignore that.
+    t.ready.catch(() => {});
+    t.finished.catch(() => {});
   } else {
     renderView();
     app.classList.add(dir === 'back' ? 'enter-back' : 'enter');
