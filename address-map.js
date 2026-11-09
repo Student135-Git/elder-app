@@ -80,6 +80,24 @@ const addrMap = (() => {
     return town ? { town, address: text.slice(town.length).trim() } : { town: null, address: text.trim() };
   }
 
+  // From Google's answers, take just the street and house number, e.g. 中央路三段 + 45號.
+  // hasNumber tells the form whether the person still needs to add the number.
+  function streetAndNumber(results) {
+    const part = (r, type) => (r.address_components || []).find((c) => c.types.includes(type));
+    const best = results.find((r) => part(r, 'route') && part(r, 'street_number'))
+      || results.find((r) => part(r, 'route'))
+      || results[0];
+    const { town } = splitAddress(best.formatted_address || '');
+    const route = part(best, 'route');
+    const num = part(best, 'street_number');
+    if (route) {
+      const n = num ? num.long_name.replace(/\s/g, '') : '';
+      return { town, address: route.long_name + (n && !/號$/.test(n) ? n + '號' : n), hasNumber: Boolean(num) };
+    }
+    const { address } = splitAddress(best.formatted_address || '');
+    return { town, address, hasNumber: /\d+號/.test(address) };
+  }
+
   function live(maps, box, st, cb) {
     const div = document.createElement('div');
     div.className = 'addr-live';
@@ -88,6 +106,7 @@ const addrMap = (() => {
       center: { lat: 23.75, lng: 121.4 }, zoom: 9,
       mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
       clickableIcons: false, gestureHandling: 'cooperative',
+      disableDoubleClickZoom: true, // double-click / double-tap fills in the address instead
     });
     const geocoder = new maps.Geocoder();
     const marker = new maps.Marker({ map, draggable: true, visible: false, title: '拖曳到正確位置 Drag to the right spot' });
@@ -113,18 +132,20 @@ const addrMap = (() => {
       if (zoom) map.setZoom(zoom);
     }
 
-    // Pin moved by hand → work out the address and township from it.
+    // Pin placed by hand → work out the street, number and township from it.
     function fromPin(latLng) {
       place(latLng);
       const ll = { lat: latLng.lat(), lng: latLng.lng() };
       geocoder.geocode({ location: ll, language: 'zh-TW' }, (res, status) => {
-        if (status !== 'OK' || !res || !res[0]) { cb.onPin(null, null, ll); return; }
-        const { town, address } = splitAddress(res[0].formatted_address);
-        cb.onPin(town, address, ll);
+        if (status !== 'OK' || !res || !res[0]) { cb.onPin(null, null, ll, false); return; }
+        const { town, address, hasNumber } = streetAndNumber(res);
+        cb.onPin(town, address, ll, hasNumber);
       });
     }
+    // Double-click (double-tap on a phone) fills in the address; a single click does nothing,
+    // so moving around the map never changes the address by accident.
+    map.addListener('dblclick', (e) => fromPin(e.latLng));
     marker.addListener('dragend', (e) => fromPin(e.latLng));
-    map.addListener('click', (e) => fromPin(e.latLng));
 
     // Typed address → find it inside the chosen township.
     let timer = 0, asked = '';
@@ -165,7 +186,7 @@ const addrMap = (() => {
     // The hint matches the map that is actually showing.
     const setTip = (pin) => {
       if (tip) tip.innerHTML = pin
-        ? B('可以拖曳紅色圖釘，或點地圖上的位置，地址會自動填好。', 'Drag the red pin or tap the map, and the address fills in for you.')
+        ? B('在地圖上家的位置點兩下，路名和門牌會自動填好。也可以拖曳紅色圖釘。', 'Double-click (double-tap) your home on the map and the street and number fill in. You can also drag the red pin.')
         : B('選好鄉鎮、打好地址，地圖會自動移過去。', 'Pick the township and type the address — the map moves there.');
     };
     const refreshLink = () => { if (open) open.href = searchURL(full(st.town, st.address.trim())); };
@@ -187,11 +208,11 @@ const addrMap = (() => {
           box.classList.remove('is-loading');
           if (!box.isConnected || keyBroken) { if (keyBroken) useEmbed(); return; }
           view = live(maps, box, st, {
-            onPin(town, address, ll) {
+            onPin(town, address, ll, hasNumber) {
               if (address) st.address = address;
               st.lat = ll.lat; st.lng = ll.lng;
               refreshLink();
-              cb.onPin(town, address, ll);
+              cb.onPin(town, address, ll, hasNumber);
             },
             onFound: cb.onFound,
           });

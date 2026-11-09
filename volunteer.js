@@ -314,11 +314,23 @@ function renderGiveNew() {
   qs('#f-date').value = draft.date;
   formMap = addrMap.mount(qs('#f-map'), { town: draft.city, address: draft.address, lat: draft.lat, lng: draft.lng }, {
     // Pin moved by hand: fill in the address (and township, if it changed).
-    onPin(town, address, ll) {
+    onPin(town, address, ll, hasNumber) {
       draft.lat = ll.lat; draft.lng = ll.lng;
       if (town && town !== draft.city) { draft.city = town; syncDraft(); formMap.adoptTown(town); }
-      if (address) { draft.address = address; qs('#f-addr').value = address; }
-      showToast('已用圖釘位置填好地址\nAddress filled in from the pin');
+      const input = qs('#f-addr');
+      if (!address) { showToast('找不到這裡的地址，請自己輸入\nNo address found here — please type it'); return; }
+      draft.address = address;
+      input.value = address;
+      if (hasNumber) {
+        showToast(`已填好：${address}\nStreet and number filled in`);
+        say(`已填好地址，${address}`);
+      } else {
+        // Street found but no house number: put the cursor at the end so they can add it.
+        showToast(`已填好路名：${address}\n請補上門牌號碼 Please add the house number`);
+        say('已填好路名，請補上門牌號碼');
+        input.focus();
+        input.setSelectionRange(address.length, address.length);
+      }
     },
     onFound(ll) { draft.lat = ll.lat; draft.lng = ll.lng; },
   });
