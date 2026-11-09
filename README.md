@@ -74,6 +74,12 @@ From a friend's project 「樂・花蓮銀髮健康生活」, rebuilt in this ap
 - **Still on each phone:** volunteer accounts and points. Demo requests only appear when `config.js` is empty.
 - **Privacy note:** KindWorld's database currently lets anyone with the public key read and change missions, which includes elders' addresses. Fine for a class demo; lock it down before real use. Lotus is a simple original drawing, not Tzu Chi's logo.
 
+## Releasing a change
+
+GitHub Pages lets browsers keep files for up to 10 minutes. Every `<script>` and `styles.css` link in
+`index.html` ends with `?v=…`; change that value (all of them together) in each release so phones load
+the new files as one matching set.
+
 ## Put it on GitHub Pages
 
 1. Create a new **public** repository on GitHub (e.g. `elder-app`).
