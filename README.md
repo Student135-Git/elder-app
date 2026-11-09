@@ -19,6 +19,15 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 - Other buttons are placeholders that show "Coming soon"
 - Phone Back button works; supports dark mode; can be added to the home screen
 
+### 樂 Entertainment — 健康運動 & 有氧舞蹈 (`fun.js`)
+
+From a friend's project 「樂・花蓮銀髮健康生活」, rebuilt in this app's style:
+
+- **健康運動 Healthy exercise:** two playlists (銀髮族核心運動・老歌帶動跳, 高齡者居家自主運動) and three videos (全身伸展操, 下肢肌力訓練, 拍打經絡操).
+- **有氧舞蹈 Aerobic dance:** five YouTube Shorts, including 長輩太極舞. YouTube titles were mostly hashtags, so each has a short name; the channel is shown on every card.
+- Each video is a picture with a big ▶; the player loads only when tapped (lighter on phones), plays right in the page, and only one plays at a time. "在 YouTube 開啟" opens it in YouTube.
+- A safety reminder sits at the top of both pages. Edit the lists in `EXERCISE_VIDEOS` / `DANCE_VIDEOS`.
+
 ### 日用品 Daily Supplies shop (wide tile at the bottom of the home screen)
 
 - Search box plus 🎤 voice search in Mandarin (Chrome on Android; needs the https GitHub Pages link)

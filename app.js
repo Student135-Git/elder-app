@@ -44,8 +44,9 @@ const CATEGORIES = [
   {
     id: 'fun', char: '樂', zh: '娛樂', en: 'Entertainment',
     items: [
+      { icon: '🌿', zh: '健康運動', en: 'Healthy exercise', href: '#fun-exercise' },
+      { icon: '💃', zh: '有氧舞蹈', en: 'Aerobic dance', href: '#fun-dance' },
       { icon: '🎵', zh: '聽音樂', en: 'Music' },
-      { icon: '📺', zh: '看影片', en: 'Videos' },
       { icon: '🧩', zh: '動腦遊戲', en: 'Brain games' },
     ],
   },
@@ -553,6 +554,7 @@ function currentView() {
 function parentOf(view) {
   if (view === 'cart' || view === 'order') return '#shop';
   if (view === 'family') return '#cart';
+  if (view === 'fun-exercise' || view === 'fun-dance') return '#fun';
   if (view === 'give' || view === 'vol') return '#home';
   if (view === 'give-new' || view === 'give-done') return '#give';
   if (view.startsWith('vol-')) return '#vol'; // my jobs, profile, badges, rewards, leaderboard, certificates
@@ -569,6 +571,8 @@ function renderView() {
   else if (view === 'cart') renderCart();
   else if (view === 'order') renderOrder();
   else if (view === 'family') renderFamily();
+  else if (view === 'fun-exercise') renderVideoPage('exercise');
+  else if (view === 'fun-dance') renderVideoPage('dance');
   else if (view === 'give') renderGive();
   else if (view === 'give-new') renderGiveNew();
   else if (view === 'give-done') renderGiveDone();
