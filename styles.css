@@ -712,3 +712,48 @@ body.sheet-open { overflow: hidden; }
 .addr-open { justify-self: start; color: var(--vb); font-weight: 700; text-decoration: none; padding: .3rem 0; }
 .addr-open:hover { text-decoration: underline; }
 .nav-btn { border-color: var(--vb); color: var(--vb); font-weight: 700; }
+
+/* ============ Purchase → tell the family (WhatsApp / LINE / email) ============ */
+.order-sum, .order-h, .fam-list, .note-box, .order-preview, .recent-orders, .order-back { width: 100%; max-width: var(--w); margin-inline: auto; }
+.order-sum { padding: 0 16px; }
+.order-items { list-style: none; margin: 0; padding: 12px 16px; display: grid; gap: .5rem; border-radius: 22px; background: var(--glass, var(--surface)); border: 1px solid var(--glass-edge, var(--line)); }
+.order-items li { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: .6rem; font-size: 1.1rem; font-weight: 700; }
+.order-items li > span:first-child { font-size: 1.5rem; }
+.order-items li > span:last-child { font-variant-numeric: tabular-nums; }
+.order-sum .cart-total { padding: 0 6px; }
+.order-when { margin: 0 0 4px; padding: 0 6px; }
+.order-h { margin: 14px auto 0; padding: 0 22px; font-size: 1.35rem; }
+.order-h .en { font-size: .9rem; margin-left: .3rem; }
+
+.fam-list { list-style: none; margin: 0; padding: 6px 16px; display: grid; gap: 12px; }
+.fam-card { display: grid; gap: 8px; padding: 12px; border-radius: 22px; background: color-mix(in srgb, var(--surface) 55%, transparent); border: 1px solid var(--glass-edge, var(--line)); }
+.fam-name { margin: 0 4px; font-size: 1.15rem; font-weight: 700; }
+
+/* Channel buttons: brand colour on the icon only, so the text keeps full contrast. */
+.action.notify .action-icon { color: #fff; }
+.action.notify.wa .action-icon { background: #1FA855; }
+.action.notify.line .action-icon { background: #06A84A; }
+.action.notify.mail .action-icon { background: #1D6FB8; }
+.action.notify.done { opacity: .78; }
+.sent-tag { margin-left: auto; padding: .2rem .6rem; border-radius: 99px; background: #DCF3E3; color: #145C2E; font-size: .85rem; font-weight: 700; white-space: nowrap; }
+.action.notify.done::after { content: none; }
+@media (prefers-color-scheme: dark) { .sent-tag { background: #173A24; color: #B5F0C8; } }
+
+.note-box { box-sizing: border-box; margin: 6px auto; padding: .8rem 1rem; border-radius: 1rem; background: color-mix(in srgb, #F6E3A6 55%, var(--surface)); color: #5C4300; font-size: 1rem; }
+@media (prefers-color-scheme: dark) { .note-box { background: color-mix(in srgb, #F6E3A6 18%, var(--surface)); color: #F6E3A6; } }
+.vwrap > .note-box { margin: 0; }
+
+.order-preview { padding: 0 22px; }
+.order-preview summary { cursor: pointer; font-weight: 700; padding: .4rem 0; }
+.order-preview pre { margin: .4rem 0 0; padding: .8rem; border-radius: .8rem; background: var(--surface); white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: .95rem; }
+.order-back { display: flex; margin-top: 14px; box-sizing: border-box; width: calc(100% - 32px); }
+
+.recent-orders { list-style: none; margin: 0; padding: 8px 16px 24px; display: grid; gap: 10px; }
+.fam-edit .vrow .flabel { margin: 0; }
+.action.notify { text-align: left; }
+.action.notify .action-text { flex: 1; min-width: 0; }
+.action.notify .sent-tag { margin-left: 0; flex: none; }
+.action.notify .sent-tag { align-self: flex-start; margin-top: .3rem; }
+.fam-edit .vrow { flex-wrap: wrap; }
+.fam-edit .vrow .flabel { flex: 1 1 10rem; min-width: 0; }
+.fam-edit [data-famremove] { min-width: 0; flex: none; }

@@ -488,7 +488,8 @@ function renderCart() {
           <span class="action-icon" aria-hidden="true">🛍️</span>
           <span class="action-text"><span>去選購</span><span class="en" lang="en">Go shopping</span></span>
         </a>
-      </section>`;
+      </section>
+      ${recentOrdersHTML()}`;
     return;
   }
 
@@ -509,38 +510,20 @@ function renderCart() {
     </ul>
     <p class="cart-total"><span>合計 <span class="en" lang="en">Total</span></span><span>NT$ ${total}</span></p>
     <div class="cart-actions">
-      <button type="button" class="action primary" data-share data-say="傳給家人">
-        <span class="action-icon" aria-hidden="true">📤</span>
-        <span class="action-text"><span>傳給家人</span><span class="en" lang="en">Send list to family</span></span>
+      <button type="button" class="action primary" data-buy data-say="確認購買並通知家人">
+        <span class="action-icon" aria-hidden="true">✅</span>
+        <span class="action-text"><span>確認購買並通知家人</span><span class="en" lang="en">Buy and tell my family</span></span>
       </button>
+      <a class="action" href="#family" data-say="家人聯絡方式">
+        <span class="action-icon" aria-hidden="true">👨‍👩‍👧</span>
+        <span class="action-text"><span>家人聯絡方式</span><span class="en" lang="en">Family contacts</span></span>
+      </a>
       <button type="button" class="action" data-clear>
         <span class="action-icon" aria-hidden="true">🗑️</span>
         <span class="action-text"><span>清空購物車</span><span class="en" lang="en">Clear cart</span></span>
       </button>
     </div>
-    <p class="note">這是購物清單，不會真的下單或付款。<br><span lang="en">This is a shopping list only — nothing is ordered or paid.</span></p>`;
-}
-
-async function shareCart() {
-  const items = cartItems();
-  if (!items.length) return;
-  const { total } = cartSummary();
-  const text = [
-    '購物清單 Shopping list',
-    ...items.map(({ p, qty }) => `• ${p.zh} ${p.en} × ${qty}`),
-    `合計 Total: NT$ ${total}`,
-  ].join('\n');
-
-  if (navigator.share) {
-    try { await navigator.share({ title: '購物清單 Shopping list', text }); return; }
-    catch (err) { if (err && err.name === 'AbortError') return; }
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('清單已複製，可貼到 LINE\nList copied');
-  } catch {
-    showToast('無法分享\nCould not share');
-  }
+    <p class="note">不會真的付款。確認後，可以用 WhatsApp、LINE 或 Email 告訴家人。<br><span lang="en">Nothing is paid. After you confirm, tell your family on WhatsApp, LINE or email.</span></p>`;
 }
 
 // Two taps instead of a pop-up: the first tap asks, the second clears.
@@ -568,7 +551,8 @@ function currentView() {
 }
 
 function parentOf(view) {
-  if (view === 'cart') return '#shop';
+  if (view === 'cart' || view === 'order') return '#shop';
+  if (view === 'family') return '#cart';
   if (view === 'give' || view === 'vol') return '#home';
   if (view === 'give-new' || view === 'give-done') return '#give';
   if (view.startsWith('vol-')) return '#vol'; // my jobs, profile, badges, rewards, leaderboard, certificates
@@ -580,8 +564,11 @@ const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)')
 
 function renderView() {
   const view = currentView();
+  if (view !== 'family') familyDraft = null; // leaving the contacts page drops unsaved edits
   if (view === 'shop') renderShop();
   else if (view === 'cart') renderCart();
+  else if (view === 'order') renderOrder();
+  else if (view === 'family') renderFamily();
   else if (view === 'give') renderGive();
   else if (view === 'give-new') renderGiveNew();
   else if (view === 'give-done') renderGiveDone();
@@ -648,7 +635,7 @@ document.addEventListener('click', (e) => {
   const link = t.closest('a[href^="#"]');
   if (link) { e.preventDefault(); go(link.getAttribute('href')); return; }
 
-  const el = t.closest('[data-soon],[data-tab],[data-add],[data-inc],[data-dec],[data-share],[data-clear],#micBtn');
+  const el = t.closest('[data-soon],[data-tab],[data-add],[data-inc],[data-dec],[data-clear],#micBtn');
   if (!el) return;
   const d = el.dataset;
   if ('soon' in d) showToast('此功能即將推出\nComing soon');
@@ -656,7 +643,6 @@ document.addEventListener('click', (e) => {
   else if (d.add) changeQty(d.add, +1);
   else if (d.inc) changeQty(d.inc, +1);
   else if (d.dec) changeQty(d.dec, -1);
-  else if ('share' in d) shareCart();
   else if ('clear' in d) clearCart(el);
   else if (el.id === 'micBtn') listen();
 });

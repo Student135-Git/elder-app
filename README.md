@@ -26,8 +26,16 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 - 常用 / Essentials shows items marked `essential: true` in any category
 - Big **＋ 加入 Add** button that turns into a − 2 ＋ quantity stepper
 - Cart bar always visible at the bottom with item count and total
-- Cart page: change amounts, **傳給家人 Send list to family** (opens the phone's share
-  sheet, e.g. LINE; copies the list if sharing isn't available), clear cart
+- Cart page: change amounts, clear cart, and **確認購買並通知家人 Buy and tell my family** (two taps)
+- **Tell the family** (`notify.js`): after a purchase, a page lists the order and one big button per family
+  member and channel — **WhatsApp** (`wa.me` link to their number), **Email** (`mailto:`) and **LINE**
+  (LINE's share screen, where you pick who). Each opens the app with the message already written; the
+  elder taps Send. Buttons are marked "✓ 已開啟" once opened. Recent purchases stay under the empty cart
+  so a message can be sent later.
+- **家人聯絡方式 Family contacts:** your name plus up to 4 family members (WhatsApp number such as
+  0912 345 678, and/or email), checked before saving. Stored on this phone only.
+- Sending with no tap at all would need the WhatsApp Business API and a LINE Official Account (both through
+  a small server holding secret keys) and an email-sending service — not possible from the page alone.
 - **No real ordering or payment.** Prices in `app.js` are sample numbers.
 - Products live in the `PRODUCTS` list in `app.js`:
 
