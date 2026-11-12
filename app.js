@@ -275,7 +275,7 @@ function renderHome() {
       ${CATEGORIES.filter((c) => !c.hidden).map((c, i) => `
         <a class="tile" style="--c:${COLORS[c.id]};--i:${i}"
            href="#${c.id}" data-say="${c.zh}" aria-label="${c.zh} ${c.en}">
-          <span class="tile-top" aria-hidden="true"><span class="tile-icon">${c.icon}</span><span class="tile-mark">${c.char}</span></span>
+          <span class="tile-icon" aria-hidden="true">${c.icon}</span>
           <span class="tile-label" aria-hidden="true">
             <span>${c.zh}</span>
             <span class="en" lang="en">${c.en}</span>
@@ -592,7 +592,7 @@ function renderView() {
   else if (view === 'vol-rank') renderRank();
   else if (view === 'vol-cert') renderCerts();
   else if (view === 'home') renderLive();
-  else if (view === 'home-clean') renderClean();
+  else if (/^home-(clean|walk|cook|rent)$/.test(view)) renderBook(view.slice(5));
   else if (view === 'home-aids') renderAids();
   else {
     const cat = CATEGORIES.find((c) => c.id === view && c.items);

@@ -18,6 +18,7 @@ const JOB_TYPES = {
   cook: { icon: '🍳', zh: '煮飯', en: 'Cooking' },
   clean: { icon: '🧹', zh: '打掃', en: 'Cleaning' },
   walk: { icon: '🚶', zh: '陪伴散步', en: 'Walk' },
+  aid: { icon: '🦯', zh: '送輔具', en: 'Deliver a device' }, // booked from 住 → 租輔具, not offered in the form
 };
 
 const EXPIRY_CHOICES = [
@@ -258,7 +259,7 @@ function renderGiveNew() {
       <section class="vcard">
         <p class="flabel">${B('需要什麼幫忙？（選一個）', 'What help do you need? (choose one)')}</p>
         <div class="choices">
-          ${Object.entries(JOB_TYPES).map(([k, t]) => `
+          ${Object.entries(JOB_TYPES).filter(([k]) => k !== 'aid').map(([k, t]) => `
             <button type="button" class="choice" data-v="type" data-k="${k}" data-say="${t.zh}" aria-pressed="false">
               <span class="ci" aria-hidden="true">${t.icon}</span>${B(t.zh, t.en)}
             </button>`).join('')}
