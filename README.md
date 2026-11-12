@@ -19,6 +19,16 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 - Other buttons are placeholders that show "Coming soon"
 - Phone Back button works; supports dark mode; can be added to the home screen
 
+### Home screen and 住 (`live.js`)
+
+- **Home:** six buttons in order — 食 🍴, 衣 👕, 住 🏠, 行 🚗, 育 📖, 樂 🎵 (icon above the character) — and one red **119** button at the bottom that opens the phone dialler with 119 filled in. Everything fits one phone screen. Edit `CATEGORIES` in `app.js`.
+- **Moved:** 日用品 shop is under 衣; 醫藥 is under 育 (`hidden: true` keeps a section without a home button).
+- **住 has four buttons:**
+  1. **打掃:** the phone asks to allow location; then "打掃將安排在 (tomorrow), 下午 2 點到 4 點…". **確認** only works after **同意** is on. Confirming saves a normal volunteer request (cleaning, 14:00, 2 hours) in the township the location is in, so volunteers see it and can navigate to the exact spot. If location is refused: try again, or type the address.
+  2. **租輔具:** five devices with drawn icons — 助行器, 帶輪助行器, 高腳折疊椅, 單腳拐杖, 四腳拐杖 (`AID_ITEMS`). Tapping one shows "coming soon" for now.
+  3. **陪伴散步** and 4. **煮菜:** open the request form with that help already chosen.
+- Below them: 我的預約 (bookings made on this phone), 我的志工需求, 我想當志工.
+
 ### 樂 Entertainment — 健康運動 & 有氧舞蹈 (`fun.js`)
 
 From a friend's project 「樂・花蓮銀髮健康生活」, rebuilt in this app's style:
@@ -63,7 +73,7 @@ From a friend's project 「樂・花蓮銀髮健康生活」, rebuilt in this ap
   - **排行榜 Leaderboard:** ranked by hours, for your township or all of Hualien. With `config.js` filled in, each volunteer's public totals (name, township, hours, points, badge count — never the password) are shared through KindWorld's `legacy_blob` table, so every phone sees everyone.
   - **證書 Certificates:** Bronze 10 h, Silver 30 h, Gold 50 h, Lotus 100 h (`CERTS`); claim one when you reach the hours.
   - ⚠ Vouchers and certificates are prototype examples, not real coupons or official documents.
-- **3D map of Hualien:** above the township buttons, a 3D map (`hualien-map.js`, three.js 0.160 from jsDelivr) shows all 13 townships as raised blocks with their real borders (`hualien-map-data.js`, generated from the Ministry of the Interior's 鄉鎮市區界線 via `taiwan-atlas`, MIT). Colours follow the landform: green for the Central Mountain Range, sand for the East Rift Valley, aqua for the coast. Tap a township on the map or its button — pointing at a button lifts it on the map with a name tag; picking one turns it blue, raises it and zooms in. Drag sideways to turn the map. Phones without 3D get the same map flat and tilted.
+- **3D map of Hualien:** above the township buttons, a 3D map (`hualien-map.js`, three.js 0.160 from jsDelivr) shows all 13 townships as raised blocks with their real borders (`hualien-map-data.js`, generated from the Ministry of the Interior's 鄉鎮市區界線 via `taiwan-atlas`, MIT). Colours follow the landform: green for the Central Mountain Range, sand for the East Rift Valley, aqua for the coast. Tap a township on the map or its button — pointing at a button lifts it on the map with a name tag; picking one turns it blue, raises it and zooms in. The map itself stays still (no swaying or turning). Phones without 3D get the same map flat and tilted.
 - **Google map for the address** (`address-map.js`): under the address box. Picking a township jumps the map straight to it; typing the address moves it to that spot (after a short pause). "在 Google 地圖打開" opens the same place in Google Maps.
   - **No key (default):** Google's embeddable map — works right away.
   - **With `GOOGLE_MAPS.key` in `config.js`:** the Maps JavaScript API — the township is outlined, and **double-clicking (double-tapping) the map fills in the street and house number** (and switches the township if needed). A single click does nothing, so moving the map never changes the address. If Google knows the street but not the number, the street is filled in and the cursor waits for the number. You can also drag the pin. Enable "Maps JavaScript API" and "Geocoding API" in Google Cloud, and restrict the key to `https://student135-git.github.io/*`. If Google rejects the key, the app falls back to the no-key map.

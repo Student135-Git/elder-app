@@ -803,3 +803,45 @@ body.sheet-open { overflow: hidden; }
 .vids.tall .vid:last-child:nth-child(odd):not(.playing) .vid-media { grid-row: 1 / span 2; }
 .vids.tall .vid:last-child:nth-child(odd):not(.playing) .vid-text { align-self: center; }
 .vids.tall .vid:last-child:nth-child(odd):not(.playing) .vid-yt { grid-column: 2; align-self: start; }
+
+/* ============ Home: six buttons, icon above the character ============ */
+.tile-top { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.tile-icon { font-size: 2rem; line-height: 1; }
+.sos-num { font-size: 2.3rem; font-weight: 700; line-height: 1; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+
+/* ============ 住: 打掃 booking and 租輔具 ============ */
+.action-icon svg { width: 2.1rem; height: 2.1rem; color: var(--c-ink); }
+.head-mark svg[viewBox="0 0 48 48"] { width: 2.4rem; height: 2.4rem; }
+.live-more { padding-top: 0; }
+.live-more .action { min-height: 4.4rem; }
+.live-booked { padding-bottom: .6rem; }
+.live-card { gap: .8rem; }
+.live-big { margin: 0; font-size: 1.35rem; font-weight: 700; line-height: 1.55; }
+.live-big strong { color: var(--vb); }
+.live-en { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.5; }
+.live-agree, .live-confirm { width: 100%; max-width: none; min-height: 4rem; font-size: 1.25rem; }
+.live-agree { display: flex; align-items: center; justify-content: center; gap: .8rem; font-weight: 700; }
+.live-box { flex: none; width: 1.7rem; height: 1.7rem; border: 2.5px solid currentColor; border-radius: .45rem; display: grid; place-items: center; font-size: 1.2rem; line-height: 1; }
+.live-agree[aria-pressed="true"] .live-box::after { content: "✓"; }
+.live-confirm:disabled { opacity: .7; }
+
+.aids { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.aids > .aid:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.aid {
+  display: grid; justify-items: center; gap: .3rem; min-width: 0; min-height: 9rem; padding: 1rem .6rem;
+  border: 1.5px solid var(--line-strong); border-radius: 1.2rem; background: var(--surface); color: var(--ink);
+  font: inherit; text-align: center; cursor: pointer;
+  transition: transform .2s var(--ease), border-color .2s, box-shadow .25s;
+  animation: rise .45s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 60ms);
+}
+.aid:hover { border-color: var(--vb); transform: translateY(-2px); box-shadow: 0 10px 18px -12px color-mix(in srgb, var(--vb) 70%, transparent); }
+.aid:active { transform: scale(.97); }
+.aid-icon { display: grid; place-items: center; width: 4.6rem; height: 4.6rem; border-radius: 50%; background: color-mix(in srgb, var(--vb) 12%, var(--surface)); color: var(--vb); font-size: 3rem; }
+.aid-name { font-size: 1.2rem; font-weight: 700; }
+/* Six tiles + 119 fit one phone screen without scrolling. */
+.grid { gap: 10px; padding-block: 6px 10px; }
+.tile { gap: 6px; min-height: 0; padding: 10px 14px 12px; }
+.tile-top { gap: 2px; }
+.tile-icon { font-size: 1.7rem; }
+.tile-mark { width: 3.3rem; height: 3.3rem; font-size: 2.1rem; border-radius: 16px; }
+.tile::after { top: 10px; right: 10px; width: 2.1rem; height: 2.1rem; font-size: 1.05rem; }

@@ -90,12 +90,11 @@ const hlMap = (() => {
     sun.position.set(-60, 140, 90); // light from the north-west, like a relief map
     scene.add(sun);
 
-    // pivot turns left/right; map lies flat (shape y = north → away from the camera).
-    const pivot = new THREE.Group();
+    // The map lies flat (shape y = north → away from the camera) and stays still:
+    // it never turns or sways, only the townships rise and the camera moves in on a pick.
     const map = new THREE.Group();
     map.rotation.x = -Math.PI / 2;
-    pivot.add(map);
-    scene.add(pivot);
+    scene.add(map);
 
     const blocks = NAMES.map((name, i) => {
       const [outer, ...holes] = HL_SHAPES[name];
@@ -145,7 +144,7 @@ const hlMap = (() => {
     const ro = new ResizeObserver(fit);
     ro.observe(box);
 
-    // Pointer: tap picks, mouse hover previews, sideways drag turns the map a little.
+    // Pointer: tap picks, mouse hover previews.
     const ray = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
     const hit = (e) => {
@@ -155,20 +154,17 @@ const hlMap = (() => {
       const h = ray.intersectObjects(blocks.map((b) => b.mesh), false)[0];
       return h ? h.object.userData.name : null;
     };
-    let yaw = 0, yawGoal = 0, down = null, dragged = false, lastTouch = 0;
-    canvas.addEventListener('pointerdown', (e) => { down = { x: e.clientX, yaw: yawGoal }; dragged = false; });
+    let down = null;
+    canvas.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
     canvas.addEventListener('pointermove', (e) => {
-      if (down && Math.abs(e.clientX - down.x) > 8) {
-        dragged = true;
-        yawGoal = Math.max(-0.6, Math.min(0.6, down.yaw + (e.clientX - down.x) * 0.006));
-        lastTouch = performance.now();
-      } else if (e.pointerType === 'mouse') {
-        const n = hit(e);
-        if (n !== state.hover) { state.hover = n; canvas.style.cursor = n ? 'pointer' : ''; }
-      }
+      if (e.pointerType !== 'mouse') return;
+      const n = hit(e);
+      if (n !== state.hover) { state.hover = n; canvas.style.cursor = n ? 'pointer' : ''; }
     });
     const up = (e) => {
-      if (down && !dragged && e.type === 'pointerup') { const n = hit(e); if (n) state.onTap(n); }
+      // A tap is a press and release in about the same place (not a scroll or a swipe).
+      const still = down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 12;
+      if (still && e.type === 'pointerup') { const n = hit(e); if (n) state.onTap(n); }
       down = null;
     };
     canvas.addEventListener('pointerup', up);
@@ -190,12 +186,6 @@ const hlMap = (() => {
       last = now;
       const k = (speed) => (reduce() ? 1 : 1 - Math.exp(-dt * speed));
 
-      // Gentle idle sway so it reads as 3D, until someone drags it.
-      const idle = !reduce() && now - lastTouch > 4000 && !state.picked;
-      const sway = idle ? Math.sin(now / 2600) * 0.12 : 0;
-      yaw += (yawGoal + sway - yaw) * k(4);
-      pivot.rotation.y = yaw;
-
       blocks.forEach((b) => {
         const sel = b.name === state.selected, hov = b.name === state.hover;
         const grown = now >= b.start;
@@ -214,7 +204,7 @@ const hlMap = (() => {
       // Ease the camera toward the selected township once it is picked.
       const s = state.picked && byName[state.selected];
       const [cx, cy] = s ? CENTRES[s.name] : [0, 4];
-      const aimGoal = s ? new THREE.Vector3(cx, 0, -cy).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw) : focus;
+      const aimGoal = s ? new THREE.Vector3(cx, 0, -cy) : focus;
       camAim.lerp(aimGoal, k(4));
       const dist = s ? fitDist * 0.78 : fitDist;
       const dir = new THREE.Vector3(0, Math.sin(0.92), Math.cos(0.92));

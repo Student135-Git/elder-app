@@ -7,18 +7,11 @@
    ========================================================= */
 const maps = (q) => 'https://www.google.com/maps/search/' + encodeURIComponent(q);
 
+// The six home buttons, in order: 食 衣 住 行 育 樂. `icon` sits above the character.
+// `hidden: true` keeps a section reachable by link without a home button.
 const CATEGORIES = [
   {
-    id: 'medicine', char: '藥', zh: '醫藥', en: 'Medicine',
-    items: [
-      { icon: '⏰', zh: '吃藥提醒', en: 'Medication reminder' },
-      { icon: '🏥', zh: '看診預約', en: 'Doctor appointment' },
-      { icon: '💊', zh: '附近藥局', en: 'Nearby pharmacy', href: maps('藥局') },
-      { icon: '🚑', zh: '緊急求救 119', en: 'Emergency call', href: 'tel:119', danger: true },
-    ],
-  },
-  {
-    id: 'food', char: '食', zh: '飲食', en: 'Food',
+    id: 'food', char: '食', icon: '🍴', zh: '飲食', en: 'Food',
     items: [
       { icon: '🍱', zh: '今日菜單', en: "Today's meals" },
       { icon: '🍜', zh: '附近餐廳', en: 'Nearby restaurants', href: maps('餐廳') },
@@ -26,7 +19,17 @@ const CATEGORIES = [
     ],
   },
   {
-    id: 'transport', char: '行', zh: '交通', en: 'Transportation',
+    id: 'clothes', char: '衣', icon: '👕', zh: '衣著', en: 'Clothing',
+    items: [
+      { icon: '🛍️', zh: '日用品購物', en: 'Daily supplies shop', href: '#shop' },
+      { icon: '👚', zh: '附近服飾店', en: 'Nearby clothing shops', href: maps('服飾店') },
+      { icon: '🧺', zh: '附近洗衣店', en: 'Nearby laundry', href: maps('洗衣店') },
+    ],
+  },
+  // 住 has its own page (live.js): 打掃, 租輔具, 陪伴散步, 煮菜.
+  { id: 'home', char: '住', icon: '🏠', zh: '居家', en: 'Live / Reside' },
+  {
+    id: 'transport', char: '行', icon: '🚗', zh: '交通', en: 'Transportation',
     items: [
       { icon: '🚕', zh: '叫計程車', en: 'Call a taxi' },
       { icon: '🚌', zh: '附近公車站', en: 'Nearby bus stops', href: maps('公車站') },
@@ -34,15 +37,16 @@ const CATEGORIES = [
     ],
   },
   {
-    id: 'body', char: '育', zh: '健身與學習', en: 'Body / Education',
+    id: 'body', char: '育', icon: '📖', zh: '健身與學習', en: 'Body / Education',
     items: [
       { icon: '🤸', zh: '每日伸展', en: 'Daily stretching' },
       { icon: '🚶', zh: '散步紀錄', en: 'Walking log' },
       { icon: '📚', zh: '健康知識', en: 'Health tips' },
+      { icon: '💊', zh: '醫藥', en: 'Medicine', href: '#medicine' },
     ],
   },
   {
-    id: 'fun', char: '樂', zh: '娛樂', en: 'Entertainment',
+    id: 'fun', char: '樂', icon: '🎵', zh: '娛樂', en: 'Entertainment',
     items: [
       { icon: '🌿', zh: '健康運動', en: 'Healthy exercise', href: '#fun-exercise' },
       { icon: '💃', zh: '有氧舞蹈', en: 'Aerobic dance', href: '#fun-dance' },
@@ -51,14 +55,14 @@ const CATEGORIES = [
     ],
   },
   {
-    id: 'home', char: '住', zh: '居家', en: 'Live / Reside',
+    id: 'medicine', char: '藥', icon: '💊', zh: '醫藥', en: 'Medicine', hidden: true,
     items: [
-      { icon: '🤝', zh: '我需要志工', en: 'I need a volunteer', href: '#give' },
-      { icon: '🪷', zh: '我想當志工', en: 'I want to volunteer', href: '#vol' },
+      { icon: '⏰', zh: '吃藥提醒', en: 'Medication reminder' },
+      { icon: '🏥', zh: '看診預約', en: 'Doctor appointment' },
+      { icon: '💊', zh: '附近藥局', en: 'Nearby pharmacy', href: maps('藥局') },
+      { icon: '🚑', zh: '緊急求救 119', en: 'Emergency call', href: 'tel:119', danger: true },
     ],
   },
-  // The shop has its own screen (no `items`). It shows as a wide tile at the bottom.
-  { id: 'shop', char: '用', zh: '日用品', en: 'Daily Supplies' },
 ];
 
 /* ----- Shop: tabs and products -----
@@ -98,7 +102,7 @@ const PRODUCTS = [
 
 // One colour per section (white text passes contrast on all of them).
 const COLORS = {
-  medicine: '#0F766E', food: '#C2410C', transport: '#1F5FBF',
+  medicine: '#0F766E', food: '#C2410C', clothes: '#0E7490', transport: '#1F5FBF',
   body: '#6B46C1', tc: '#1D6FB8', fun: '#BE185D', home: '#8A5A2B',
   shop: '#1E293B', cart: '#1E293B',
 };
@@ -268,19 +272,20 @@ function renderHome() {
   titleEl.dataset.say = `${hi}，現在${c.spoken}，今天是${date}`;
   app.innerHTML = `
     <nav class="grid" aria-label="主選單 Main menu">
-      ${CATEGORIES.map((c, i) => `
-        <a class="tile${c.items ? '' : ' wide'}" style="--c:${COLORS[c.id]};--i:${i}"
+      ${CATEGORIES.filter((c) => !c.hidden).map((c, i) => `
+        <a class="tile" style="--c:${COLORS[c.id]};--i:${i}"
            href="#${c.id}" data-say="${c.zh}" aria-label="${c.zh} ${c.en}">
-          <span class="tile-mark" aria-hidden="true">${c.char}</span>
+          <span class="tile-top" aria-hidden="true"><span class="tile-icon">${c.icon}</span><span class="tile-mark">${c.char}</span></span>
           <span class="tile-label" aria-hidden="true">
             <span>${c.zh}</span>
             <span class="en" lang="en">${c.en}</span>
           </span>
         </a>`).join('')}
     </nav>
-    <a class="sos" href="tel:119" data-say="緊急求救">
+    <a class="sos" href="tel:119" data-say="緊急求救 一一九" aria-label="緊急求救，撥打 119 Emergency, call 119">
       <span class="sos-icon" aria-hidden="true">🚑</span>
-      <span class="sos-text"><span>緊急求救 119</span><span class="en" lang="en">Emergency</span></span>
+      <span class="sos-num">119</span>
+      <span class="sos-text"><span>緊急求救</span><span class="en" lang="en">Emergency call</span></span>
     </a>`;
 }
 
@@ -552,6 +557,9 @@ function currentView() {
 }
 
 function parentOf(view) {
+  if (view === 'shop') return '#clothes';
+  if (view === 'medicine') return '#body';
+  if (view.startsWith('home-')) return '#home';
   if (view === 'cart' || view === 'order') return '#shop';
   if (view === 'family') return '#cart';
   if (view === 'fun-exercise' || view === 'fun-dance') return '#fun';
@@ -583,6 +591,9 @@ function renderView() {
   else if (view === 'vol-shop') renderRewards();
   else if (view === 'vol-rank') renderRank();
   else if (view === 'vol-cert') renderCerts();
+  else if (view === 'home') renderLive();
+  else if (view === 'home-clean') renderClean();
+  else if (view === 'home-aids') renderAids();
   else {
     const cat = CATEGORIES.find((c) => c.id === view && c.items);
     if (cat) renderCategory(cat); else renderHome();
