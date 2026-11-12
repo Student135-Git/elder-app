@@ -22,7 +22,7 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 ### Home screen and 住 (`live.js`)
 
 - **Home:** six buttons in order — 食 🍴, 衣 👕, 住 🏠, 行 🚗, 育 📖, 樂 🎵 (icon above the name) — and one red **119** button at the bottom that opens the phone dialler with 119 filled in. Everything fits one phone screen. Edit `CATEGORIES` in `app.js`.
-- **Moved:** 日用品 shop is under 衣; 醫藥 is under 育 (`hidden: true` keeps a section without a home button).
+- **衣 means daily-use things:** its button is labelled 日用品 and opens the shop directly. 醫藥 is under 育 (`hidden: true` keeps a section without a home button).
 - **住 has four buttons:**
   1. **打掃** (tomorrow 14:00–16:00), 3. **陪伴散步** (09:00–10:00) and 4. **煮菜** (10:00–12:00) all book the same way: the phone asks to allow location; then "…將安排在 (tomorrow), …"; **確認** only works after **同意** is on. Confirming saves a normal volunteer request in the township the location is in, so volunteers see it and can navigate to the exact spot. If location is refused: try again, or type the address. Times are in `SERVICES`.
   2. **租輔具:** five devices with drawn icons — 助行器, 帶輪助行器, 高腳折疊椅, 單腳拐杖, 四腳拐杖 (`AID_ITEMS`). Tapping one books it the same way: a volunteer brings it tomorrow 10:00–11:00 (job type 送輔具).

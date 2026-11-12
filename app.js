@@ -18,14 +18,8 @@ const CATEGORIES = [
       { icon: '💧', zh: '喝水提醒', en: 'Drink-water reminder' },
     ],
   },
-  {
-    id: 'clothes', char: '衣', icon: '👕', zh: '衣著', en: 'Clothing',
-    items: [
-      { icon: '🛍️', zh: '日用品購物', en: 'Daily supplies shop', href: '#shop' },
-      { icon: '👚', zh: '附近服飾店', en: 'Nearby clothing shops', href: maps('服飾店') },
-      { icon: '🧺', zh: '附近洗衣店', en: 'Nearby laundry', href: maps('洗衣店') },
-    ],
-  },
+  // 衣 stands for daily-use things here: it opens the 日用品 shop directly.
+  { id: 'clothes', char: '衣', icon: '👕', zh: '日用品', en: 'Daily supplies', href: '#shop' },
   // 住 has its own page (live.js): 打掃, 租輔具, 陪伴散步, 煮菜.
   { id: 'home', char: '住', icon: '🏠', zh: '居家', en: 'Live / Reside' },
   {
@@ -274,7 +268,7 @@ function renderHome() {
     <nav class="grid" aria-label="主選單 Main menu">
       ${CATEGORIES.filter((c) => !c.hidden).map((c, i) => `
         <a class="tile" style="--c:${COLORS[c.id]};--i:${i}"
-           href="#${c.id}" data-say="${c.zh}" aria-label="${c.zh} ${c.en}">
+           href="${c.href || '#' + c.id}" data-say="${c.zh}" aria-label="${c.zh} ${c.en}">
           <span class="tile-icon" aria-hidden="true">${c.icon}</span>
           <span class="tile-label" aria-hidden="true">
             <span>${c.zh}</span>
@@ -557,7 +551,6 @@ function currentView() {
 }
 
 function parentOf(view) {
-  if (view === 'shop') return '#clothes';
   if (view === 'medicine') return '#body';
   if (view.startsWith('home-')) return '#home';
   if (view === 'cart' || view === 'order') return '#shop';
