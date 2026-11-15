@@ -849,3 +849,130 @@ body.sheet-open { overflow: hidden; }
 /* Home tiles: icon and name only (no character badge). */
 .tile-icon { font-size: 2.6rem; }
 .tile { gap: 10px; padding: 14px 14px 14px; }
+
+/* ============ Audit fixes (small phones, largest text size) ============ */
+/* Home: always two across on phones (360px phones used to drop to one long column). */
+.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 620px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tile { min-width: 0; }
+.tile-label { min-width: 0; overflow-wrap: anywhere; }
+/* Rows and buttons wrap instead of running off the side when text is enlarged. */
+.vrow { flex-wrap: wrap; }
+.btn-ghost.sm { min-width: 0; }
+.action-text { min-width: 0; overflow-wrap: anywhere; }
+.fam-card { grid-template-columns: minmax(0, 1fr); }
+.voucher-own { grid-template-columns: auto minmax(0, 1fr); }
+.voucher-own .v-code { grid-column: 1 / -1; justify-self: start; white-space: normal; overflow-wrap: anywhere; }
+/* Comfortable tap targets. */
+.vid-yt { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .3rem; min-height: 44px; }
+.order-preview summary { min-height: 48px; display: flex; align-items: center; gap: .4rem; }
+
+/* ============ 樂 → 花蓮活動 (events and reminders) ============ */
+.evwrap { width: 100%; max-width: var(--w); margin: 0 auto; padding: 4px 16px 28px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.ev-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ev-tabs button {
+  min-height: 3.4rem; padding: .4rem .6rem; border: 2px solid var(--line-strong); border-radius: 1rem;
+  background: var(--glass, var(--surface)); color: var(--ink); font: inherit; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+  transition: transform .18s var(--ease), background .2s, border-color .2s, color .2s;
+}
+.ev-tabs button:active { transform: scale(.97); }
+.ev-tabs button[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; }
+.ev-tabs button[aria-pressed="true"] .en { color: #fff; opacity: .9; }
+.ev-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ev-filters > div { display: grid; gap: .3rem; min-width: 0; }
+.ev-filters .flabel { font-size: 1rem; }
+.ev-filters .in:focus { border-color: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 22%, transparent); }
+.ev-filters select.in { background-image: linear-gradient(45deg, transparent 50%, var(--c) 50%), linear-gradient(135deg, var(--c) 50%, transparent 50%); }
+@media (max-width: 380px) { .ev-filters { grid-template-columns: minmax(0, 1fr); } }
+
+.evs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 620px) { .evs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ev {
+  position: relative; display: grid; align-content: start; gap: .45rem; min-width: 0; padding: 16px 16px 14px;
+  border-radius: 22px; background: var(--glass, var(--surface)); border: 1px solid var(--glass-edge, var(--line));
+  box-shadow: var(--glass-shadow, none); overflow: hidden;
+  animation: rise .45s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 50ms);
+  transition: border-color .25s, box-shadow .25s;
+}
+.evs.still .ev { animation: none; }
+.ev::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--c); opacity: .25; transition: opacity .25s; }
+.ev.saved { border-color: var(--c); box-shadow: 0 0 0 1px var(--c); }
+.ev.saved::before { opacity: 1; }
+.ev-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; }
+.ev-kind { color: var(--c-ink); font-weight: 700; font-size: 1rem; }
+.ev-kind .en { color: inherit; opacity: .8; }
+.ev-status { padding: .2rem .7rem; border-radius: 99px; background: color-mix(in srgb, var(--c) 12%, var(--surface)); color: var(--c-ink); font-size: .9rem; font-weight: 700; }
+.ev-status.soon { background: var(--c); color: #fff; animation: ev-pulse 2.2s ease-in-out infinite; }
+@keyframes ev-pulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--c) 22%, transparent); } }
+.ev h3 { margin: 0; font-size: 1.3rem; line-height: 1.35; text-wrap: balance; overflow-wrap: anywhere; }
+.ev > p { margin: 0; overflow-wrap: anywhere; }
+.ev .jfacts { margin-top: .2rem; }
+.ev .jfacts li > span:last-child { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.ev-sub { font-size: .85rem; }
+.ev-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: .5rem; }
+.ev-btn, .ev-map {
+  display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: 3.4rem; padding: .4rem .9rem;
+  border-radius: 1rem; font: inherit; font-size: 1.1rem; font-weight: 700; text-decoration: none; cursor: pointer;
+  transition: transform .18s var(--ease), background .2s, color .2s, border-color .2s;
+}
+.ev-btn { border: 2px solid var(--c); background: var(--c); color: #fff; text-align: left; }
+.ev-btn .en { color: #fff; opacity: .9; }
+.ev-btn.on { background: color-mix(in srgb, var(--c) 10%, var(--surface)); color: var(--c-ink); }
+.ev-btn.on .en { color: var(--c-ink); }
+.ev-btn-icon { font-size: 1.3rem; line-height: 1; }
+.ev-btn.ring .ev-btn-icon { animation: ev-tick .5s var(--ease); }
+@keyframes ev-tick { 0% { transform: scale(.2) rotate(-40deg); } 60% { transform: scale(1.35); } }
+.ev-map { border: 2px solid var(--line-strong); background: transparent; color: var(--ink); }
+.ev-btn:active, .ev-map:active { transform: scale(.97); }
+.ev-empty { margin: 0; padding: 1.6rem 1rem; border-radius: 22px; background: var(--glass, var(--surface)); border: 1px dashed var(--line-strong); text-align: center; color: var(--muted); }
+.ev-note { margin: 0; padding: 0 6px; }
+
+.ev-banner { padding: .8rem 1rem; border-radius: 1.1rem; background: color-mix(in srgb, #F6E3A6 60%, var(--surface)); color: #5C4300; border-left: 6px solid #D9A400; animation: rise .4s var(--ease); }
+.ev-banner p { margin: .15rem 0; }
+.ev-banner-t { font-weight: 700; }
+@media (prefers-color-scheme: dark) { .ev-banner { background: color-mix(in srgb, #F6E3A6 18%, var(--surface)); color: #F6E3A6; } }
+.ev-bell { display: inline-block; transform-origin: 50% 10%; animation: ev-ring 2.6s ease-in-out infinite; }
+@keyframes ev-ring { 0%, 70%, 100% { transform: none; } 76% { transform: rotate(16deg); } 82% { transform: rotate(-14deg); } 88% { transform: rotate(9deg); } 94% { transform: rotate(-5deg); } }
+
+/* Home notice for saved events that are close. */
+.ev-alert {
+  display: flex; align-items: center; gap: .7rem; width: calc(100% - 32px); max-width: calc(var(--w) - 32px); margin: 2px auto 4px; padding: .5rem .9rem;
+  border-radius: 1rem; background: color-mix(in srgb, #F6E3A6 70%, var(--surface)); color: #5C4300; text-decoration: none; font-weight: 700;
+  animation: rise .5s var(--ease) backwards .2s;
+}
+.ev-alert .ev-bell { font-size: 1.5rem; }
+.ev-alert-text { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+.ev-alert .en { color: inherit; opacity: .85; }
+@media (prefers-color-scheme: dark) { .ev-alert { background: color-mix(in srgb, #F6E3A6 22%, var(--surface)); color: #F6E3A6; } }
+
+/* ============ Home scenery: Hualien mountains and the Pacific ============ */
+.scene {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; width: 100%; height: min(30vh, 230px); pointer-events: none;
+  opacity: 0; transition: opacity .6s;
+  --sky-body: #FFD36B; --far: #8FB7A3; --near: #6E9C8B; --sea1: #7FC4DA; --sea2: #5BAFCB;
+}
+body[data-view="home"] .scene { opacity: .5; }
+body[data-tod="morning"] .scene { --sky-body: #FFB24D; --far: #B6A7C9; --near: #8C9FB8; --sea1: #9CCFE0; --sea2: #74B9D2; }
+body[data-tod="evening"] .scene { --sky-body: #F4F1DE; --far: #6C6A9A; --near: #4D4F7D; --sea1: #5D7FB5; --sea2: #44669E; }
+.scene-sun { fill: var(--sky-body); transition: fill 1.2s; }
+.scene-glow { fill: var(--sky-body); opacity: .25; transform-origin: 318px 46px; animation: scene-glow 5s ease-in-out infinite; }
+.scene-far { fill: var(--far); transition: fill 1.2s; }
+.scene-near { fill: var(--near); transition: fill 1.2s; }
+.scene-wave { transition: fill 1.2s; }
+.scene-wave.w1 { fill: var(--sea1); animation: scene-wave 7s linear infinite; }
+.scene-wave.w2 { fill: var(--sea2); animation: scene-wave 5s linear infinite reverse; }
+@keyframes scene-wave { to { transform: translateX(80px); } }
+@keyframes scene-glow { 50% { transform: scale(1.18); opacity: .14; } }
+@media (prefers-color-scheme: dark) { body[data-view="home"] .scene { opacity: .32; } }
+.btn-ghost.sm { min-height: 44px; }
+/* 3D entrance animations must never widen the page while they play. */
+main { overflow-x: clip; }
+.ev h3 { text-wrap: wrap; }
+/* Dark mode: blue text needs a lighter blue to stay readable. */
+@media (prefers-color-scheme: dark) {
+  .seg button, .stat b, .v-cost, .rank-h b, .live-big strong, .nav-btn, .addr-open, .nstep button, .v-code, .aid-icon { color: #9CC4FF; }
+  .seg { border-color: #5A96DC; }
+  .seg button[aria-pressed="true"] { color: #fff; }
+  .nstep button, .v-code, .nav-btn { border-color: #5A96DC; }
+  .head-mark svg { color: #9CC4FF; }
+}

@@ -128,6 +128,21 @@ function renderBook(kind) {
   }
   setHeader(s.zh, true, 'give', 'tc');
   app.className = '';
+  const day0 = bookDay();
+  // Already booked this for tomorrow? Show that instead of booking it twice.
+  const dup = booking.step === 'idle' && getJobs().find((j) => getBookings().includes(j.id) && j.types[0] === s.type && j.date === day0.ymd && (!item || j.desc.includes(item.zh)));
+  if (dup) {
+    app.innerHTML = `${item ? pageHead(item.svg, item.zh, item.en) : pageHead(s.icon, s.zh, s.en)}
+      <div class="vwrap">
+        <section class="vcard live-card">
+          <p class="live-big">您已經預約了：<br>${day0.zh}，${s.timeZh}</p>
+          <p class="live-en" lang="en">You have already booked this: ${day0.en}, ${s.timeEn}.</p>
+          <p class="vnote big">要取消，請到「居家」的「我的預約」。<br><span lang="en">To cancel, go to My bookings under Live / Reside.</span></p>
+        </section>
+        <a class="btn-primary" href="#home">${B('回到居家', 'Back to Live / Reside')}</a>
+      </div>`;
+    return;
+  }
   if (booking.step === 'idle') askLocation(kind); // the phone now asks to allow location
   const head = item ? pageHead(item.svg, item.zh, item.en) : pageHead(s.icon, s.zh, s.en);
   const day = bookDay();

@@ -25,7 +25,7 @@ const CATEGORIES = [
   {
     id: 'transport', char: '行', icon: '🚗', zh: '交通', en: 'Transportation',
     items: [
-      { icon: '🚕', zh: '叫計程車', en: 'Call a taxi' },
+      { icon: '🚕', zh: '附近計程車', en: 'Taxis nearby', href: maps('計程車') },
       { icon: '🚌', zh: '附近公車站', en: 'Nearby bus stops', href: maps('公車站') },
       { icon: '🏠', zh: '帶我回家', en: 'Take me home' },
     ],
@@ -33,7 +33,7 @@ const CATEGORIES = [
   {
     id: 'body', char: '育', icon: '📖', zh: '健身與學習', en: 'Body / Education',
     items: [
-      { icon: '🤸', zh: '每日伸展', en: 'Daily stretching' },
+      { icon: '🤸', zh: '每日伸展', en: 'Daily stretching', href: '#fun-exercise' },
       { icon: '🚶', zh: '散步紀錄', en: 'Walking log' },
       { icon: '📚', zh: '健康知識', en: 'Health tips' },
       { icon: '💊', zh: '醫藥', en: 'Medicine', href: '#medicine' },
@@ -42,6 +42,7 @@ const CATEGORIES = [
   {
     id: 'fun', char: '樂', icon: '🎵', zh: '娛樂', en: 'Entertainment',
     items: [
+      { icon: '🎪', zh: '花蓮活動', en: 'Hualien events', href: '#fun-events' },
       { icon: '🌿', zh: '健康運動', en: 'Healthy exercise', href: '#fun-exercise' },
       { icon: '💃', zh: '有氧舞蹈', en: 'Aerobic dance', href: '#fun-dance' },
       { icon: '🎵', zh: '聽音樂', en: 'Music' },
@@ -265,6 +266,7 @@ function renderHome() {
   titleEl.innerHTML = `<span class="hello-row"><span class="hello-big">${hi}</span><span class="hello-clock" id="clock" data-t="${c.key}">${c.time}</span></span><span class="hello-date">${date}</span>`;
   titleEl.dataset.say = `${hi}，現在${c.spoken}，今天是${date}`;
   app.innerHTML = `
+    ${evHomeNotice()}
     <nav class="grid" aria-label="主選單 Main menu">
       ${CATEGORIES.filter((c) => !c.hidden).map((c, i) => `
         <a class="tile" style="--c:${COLORS[c.id]};--i:${i}"
@@ -555,7 +557,7 @@ function parentOf(view) {
   if (view.startsWith('home-')) return '#home';
   if (view === 'cart' || view === 'order') return '#shop';
   if (view === 'family') return '#cart';
-  if (view === 'fun-exercise' || view === 'fun-dance') return '#fun';
+  if (view.startsWith('fun-')) return '#fun';
   if (view === 'give' || view === 'vol') return '#home';
   if (view === 'give-new' || view === 'give-done') return '#give';
   if (view.startsWith('vol-')) return '#vol'; // my jobs, profile, badges, rewards, leaderboard, certificates
@@ -574,6 +576,7 @@ function renderView() {
   else if (view === 'family') renderFamily();
   else if (view === 'fun-exercise') renderVideoPage('exercise');
   else if (view === 'fun-dance') renderVideoPage('dance');
+  else if (view === 'fun-events') renderEvents();
   else if (view === 'give') renderGive();
   else if (view === 'give-new') renderGiveNew();
   else if (view === 'give-done') renderGiveDone();

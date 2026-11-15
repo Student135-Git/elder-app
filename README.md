@@ -28,6 +28,22 @@ Motion: pages slide and fade between screens (direction follows forward / back),
   2. **租輔具:** five devices with drawn icons — 助行器, 帶輪助行器, 高腳折疊椅, 單腳拐杖, 四腳拐杖 (`AID_ITEMS`). Tapping one books it the same way: a volunteer brings it tomorrow 10:00–11:00 (job type 送輔具).
 - Below them: 我的預約 (bookings made on this phone), 我的志工需求, 我想當志工.
 
+### 樂 → 花蓮活動 Hualien events (`events.js`, `events-data.js`)
+
+From a friend's project "Hualien Events & Reminders", rebuilt in this app's style:
+
+- Browse events by township (地區) and type (類型); events whose end date has passed are hidden automatically; dated events come first, regular programs (樂齡學習中心) last.
+- **提醒我** saves an event on this phone (我的提醒 tab). Saved events that start or end within 3 days show in a banner on the page and as a 🔔 notice on the home screen. It is a saved list, not a phone notification.
+- **地圖** opens the venue in Google Maps.
+- To update events, edit `HL_EVENTS` in `events-data.js` (id, area, start, end, zh / en) and `EVENTS_UPDATED`.
+
+### Look and checks
+
+- **Home scenery:** Hualien's mountains and the Pacific at the bottom of the home screen (inline SVG in `index.html`), with waves that move and a sun or moon that follows the time of day. Off under "reduce motion".
+- **App icon:** `icon.svg` (house with a heart over the mountains).
+- Every page is checked at 360 px wide at the normal and largest text size: no sideways scrolling, tap targets at least 44 px, every control named. Works in dark mode.
+- 住 bookings can't be made twice for the same service and day.
+
 ### 樂 Entertainment — 健康運動 & 有氧舞蹈 (`fun.js`)
 
 From a friend's project 「樂・花蓮銀髮健康生活」, rebuilt in this app's style:
