@@ -37,6 +37,11 @@ From a friend's project "Hualien Events & Reminders", rebuilt in this app's styl
 - **地圖** opens the venue in Google Maps.
 - To update events, edit `HL_EVENTS` in `events-data.js` (id, area, start, end, zh / en) and `EVENTS_UPDATED`.
 
+### Daily-life pages (`daily.js`) and account database
+
+- 今日菜單, 喝水提醒, 帶我回家, 散步紀錄, 健康知識, 聽音樂, 動腦遊戲 (memory match), 吃藥提醒, 看診預約 — all saved on this phone. Reminders show while the app is open and as a notice on the home screen; they are not phone notifications.
+- **Account database:** run `database/accounts.sql` in your own Supabase project and fill in `DATABASE` in `config.js`. Account names and bcrypt-scrambled passwords are then kept there (`accounts.js`); passwords are never readable. With it empty, accounts stay on each phone. Tested only against a stand-in server, not a real Supabase project yet.
+
 ### Look and checks
 
 - **Home scenery:** Hualien's mountains and the Pacific at the bottom of the home screen (inline SVG in `index.html`), with waves that move and a sun or moon that follows the time of day. Off under "reduce motion".

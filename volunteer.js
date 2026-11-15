@@ -484,7 +484,9 @@ function renderSignIn(role = 'vol') {
         <input class="in" id="v-pw" type="password" autocomplete="${vMode === 'signin' ? 'current-password' : 'new-password'}" maxlength="40">
         <p class="ferr" id="v-err" role="alert" hidden></p>
         <button type="button" class="btn-primary gap" data-v="auth">${vMode === 'signin' ? T('登入', 'Sign in') : T('建立帳號', 'Create account')}</button>
-        <p class="vnote">${T('示範版：帳號只存在這個瀏覽器。請不要使用其他網站的密碼。', 'Prototype: accounts stay in this browser. Do not reuse a password from another site.')}</p>
+        <p class="vnote">${accounts.on
+          ? T('帳號存在資料庫，密碼會加密保存，沒有人看得到。請不要使用其他網站的密碼。', 'Accounts are kept in the database. Passwords are stored scrambled and nobody can read them. Do not reuse a password from another site.')
+          : T('示範版：帳號只存在這個瀏覽器。請不要使用其他網站的密碼。', 'Prototype: accounts stay in this browser. Do not reuse a password from another site.')}</p>
       </section>
     </div>`;
 }
@@ -507,6 +509,25 @@ async function doAuth() {
   if (pw.length < 4) return fail('密碼至少 4 個字。', 'Password needs at least 4 characters.');
   const key = Object.keys(getUsers()).find((k) => k.toLowerCase() === name.toLowerCase());
   const h = await hashPw(name, pw);
+  if (accounts.on) {
+    // The account database decides; this phone keeps the volunteer's points and history.
+    let res;
+    try { res = await (vMode === 'signup' ? accounts.register(name, pw) : accounts.login(name, pw)); }
+    catch { return fail('無法連線到帳號資料庫，請稍後再試。', 'Could not reach the account database. Please try again.'); }
+    if (!res.ok) {
+      return res.error === 'taken' ? fail('這個名稱已經有人用了。', 'That name is already taken.')
+        : res.error === 'invalid' ? fail('名稱要 2 到 20 個字，密碼至少 4 個字。', 'Name 2–20 characters, password at least 4.')
+          : fail('名稱或密碼不正確。', 'Name or password is not correct.');
+    }
+    const us = getUsers();
+    const local = key || res.name;
+    if (!us[local]) us[local] = { points: 0, earned: 0, hours: 0, city: '', jobs: [], created: Date.now() };
+    delete us[local].h; // the password check lives in the database, not on the phone
+    saveUsers(us);
+    vset('tc_session', local);
+    rerender();
+    return;
+  }
   if (vMode === 'signup') {
     if (key) return fail('這個名稱已經有人用了。', 'That name is already taken.');
     const us = getUsers();

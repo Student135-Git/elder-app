@@ -13,9 +13,9 @@ const CATEGORIES = [
   {
     id: 'food', char: '食', icon: '🍴', zh: '飲食', en: 'Food',
     items: [
-      { icon: '🍱', zh: '今日菜單', en: "Today's meals" },
+      { icon: '🍱', zh: '今日菜單', en: "Today's meals", href: '#food-menu' },
       { icon: '🍜', zh: '附近餐廳', en: 'Nearby restaurants', href: maps('餐廳') },
-      { icon: '💧', zh: '喝水提醒', en: 'Drink-water reminder' },
+      { icon: '💧', zh: '喝水提醒', en: 'Drink-water reminder', href: '#food-water' },
     ],
   },
   // 衣 stands for daily-use things here: it opens the 日用品 shop directly.
@@ -27,15 +27,15 @@ const CATEGORIES = [
     items: [
       { icon: '🚕', zh: '附近計程車', en: 'Taxis nearby', href: maps('計程車') },
       { icon: '🚌', zh: '附近公車站', en: 'Nearby bus stops', href: maps('公車站') },
-      { icon: '🏠', zh: '帶我回家', en: 'Take me home' },
+      { icon: '🏠', zh: '帶我回家', en: 'Take me home', href: '#go-home' },
     ],
   },
   {
     id: 'body', char: '育', icon: '📖', zh: '健身與學習', en: 'Body / Education',
     items: [
       { icon: '🤸', zh: '每日伸展', en: 'Daily stretching', href: '#fun-exercise' },
-      { icon: '🚶', zh: '散步紀錄', en: 'Walking log' },
-      { icon: '📚', zh: '健康知識', en: 'Health tips' },
+      { icon: '🚶', zh: '散步紀錄', en: 'Walking log', href: '#body-walk' },
+      { icon: '📚', zh: '健康知識', en: 'Health tips', href: '#body-tips' },
       { icon: '💊', zh: '醫藥', en: 'Medicine', href: '#medicine' },
     ],
   },
@@ -45,15 +45,15 @@ const CATEGORIES = [
       { icon: '🎪', zh: '花蓮活動', en: 'Hualien events', href: '#fun-events' },
       { icon: '🌿', zh: '健康運動', en: 'Healthy exercise', href: '#fun-exercise' },
       { icon: '💃', zh: '有氧舞蹈', en: 'Aerobic dance', href: '#fun-dance' },
-      { icon: '🎵', zh: '聽音樂', en: 'Music' },
-      { icon: '🧩', zh: '動腦遊戲', en: 'Brain games' },
+      { icon: '🎵', zh: '聽音樂', en: 'Music', href: '#fun-music' },
+      { icon: '🧩', zh: '動腦遊戲', en: 'Brain games', href: '#fun-games' },
     ],
   },
   {
     id: 'medicine', char: '藥', icon: '💊', zh: '醫藥', en: 'Medicine', hidden: true,
     items: [
-      { icon: '⏰', zh: '吃藥提醒', en: 'Medication reminder' },
-      { icon: '🏥', zh: '看診預約', en: 'Doctor appointment' },
+      { icon: '⏰', zh: '吃藥提醒', en: 'Medication reminder', href: '#med-pills' },
+      { icon: '🏥', zh: '看診預約', en: 'My appointments', href: '#med-visits' },
       { icon: '💊', zh: '附近藥局', en: 'Nearby pharmacy', href: maps('藥局') },
       { icon: '🚑', zh: '緊急求救 119', en: 'Emergency call', href: 'tel:119', danger: true },
     ],
@@ -266,7 +266,7 @@ function renderHome() {
   titleEl.innerHTML = `<span class="hello-row"><span class="hello-big">${hi}</span><span class="hello-clock" id="clock" data-t="${c.key}">${c.time}</span></span><span class="hello-date">${date}</span>`;
   titleEl.dataset.say = `${hi}，現在${c.spoken}，今天是${date}`;
   app.innerHTML = `
-    ${evHomeNotice()}
+    ${homeNotice()}
     <nav class="grid" aria-label="主選單 Main menu">
       ${CATEGORIES.filter((c) => !c.hidden).map((c, i) => `
         <a class="tile" style="--c:${COLORS[c.id]};--i:${i}"
@@ -558,6 +558,10 @@ function parentOf(view) {
   if (view === 'cart' || view === 'order') return '#shop';
   if (view === 'family') return '#cart';
   if (view.startsWith('fun-')) return '#fun';
+  if (view.startsWith('food-')) return '#food';
+  if (view.startsWith('go-')) return '#transport';
+  if (view.startsWith('body-')) return '#body';
+  if (view.startsWith('med-')) return '#medicine';
   if (view === 'give' || view === 'vol') return '#home';
   if (view === 'give-new' || view === 'give-done') return '#give';
   if (view.startsWith('vol-')) return '#vol'; // my jobs, profile, badges, rewards, leaderboard, certificates
@@ -577,6 +581,7 @@ function renderView() {
   else if (view === 'fun-exercise') renderVideoPage('exercise');
   else if (view === 'fun-dance') renderVideoPage('dance');
   else if (view === 'fun-events') renderEvents();
+  else if (DAILY_PAGES[view]) DAILY_PAGES[view]();
   else if (view === 'give') renderGive();
   else if (view === 'give-new') renderGiveNew();
   else if (view === 'give-done') renderGiveDone();

@@ -12,6 +12,16 @@ const KINDWORLD = {
   anonKey: '',  // Supabase → Project Settings → API → anon public
 };
 
+/* Account database (account name + password), on your own Supabase project.
+   1. Create a project at supabase.com.
+   2. SQL Editor → paste database/accounts.sql → Run.
+   3. Project Settings → API: copy the Project URL and the anon public key here.
+   Leave empty and accounts stay on each phone. Never put the service_role key here. */
+const DATABASE = {
+  url: '',
+  anonKey: '',
+};
+
 /* Google Maps for the address box. Without a key you still get a Google map
    that follows the township and address. With a key you also get a pin you
    can drag or tap, which fills in the address for you.
