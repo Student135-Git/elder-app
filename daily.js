@@ -71,44 +71,84 @@ function renderWater() {
 }
 
 /* ---------- 行 帶我回家 ---------- */
-let homeBusy = '';
+// The home address is typed in (no live location). Saved as { town, address } on this phone.
+let homeEdit = false;
+let homeMap = null;
+const getHome = () => { const h = store.get('homeAddr', null); return h && h.town && h.address ? h : null; };
+const homeQuery = (h) => `花蓮縣${h.town}${h.address}`;
+
 function renderGoHome() {
-  const h = store.get('homeLoc', null);
-  const body = h ? `
-    <section class="dcard center">
-      <p class="dbig">🏠 已記下您的家</p><p class="en" lang="en">Your home is saved</p>
-      <p class="dlead">${fmtDate(h.at, 'zh')} 設定 <span class="en" lang="en">Set on ${fmtDate(h.at, 'en')}</span></p>
-      <a class="dbtn big" href="https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}" target="_blank" rel="noopener" data-say="帶我回家">🧭 ${bi('帶我回家', 'Take me home')}</a>
-      <a class="dbtn ghost" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}" target="_blank" rel="noopener">${bi('在地圖上看我的家', 'See my home on the map')}</a>
-      <button type="button" class="dbtn ghost" data-d="homeSet">${bi('重新設定（我現在在家）', 'Set again (I am at home now)')}</button>
-    </section>` : `
-    <section class="dcard center">
-      <p class="dbig">還沒有設定您的家</p><p class="en" lang="en">Your home is not set yet</p>
-      <p class="dlead">請在<strong>家裡</strong>按下面的按鈕，手機會記下這個位置。以後按「帶我回家」就會帶路。<br><span class="en" lang="en">Press the button <strong>while you are at home</strong>. Later, “Take me home” will show the way.</span></p>
-      <button type="button" class="dbtn big" data-d="homeSet">📍 ${bi('我現在在家，記下這裡', 'I am at home — save this place')}</button>
-    </section>`;
-  dailyPage('🏠', '帶我回家', 'Take me home', 'transport', `${homeBusy ? `<p class="note-box">${homeBusy}</p>` : ''}${body}
-    <p class="note">位置只存在這支手機上。<br><span lang="en">The location is saved on this phone only.</span></p>`);
+  const h = getHome();
+  if (h && !homeEdit) {
+    const q = encodeURIComponent(homeQuery(h));
+    dailyPage('🏠', '帶我回家', 'Take me home', 'transport', `
+      <section class="dcard center">
+        <p class="dbig">🏠 我的家</p>
+        <p class="dlead">花蓮縣${h.town} ${dEsc(h.address)}<br><span class="en" lang="en">${cityLabel(h.town, 'en')}, Hualien</span></p>
+        <a class="dbtn big" href="https://www.google.com/maps/dir/?api=1&destination=${q}" target="_blank" rel="noopener" data-say="帶我回家">🧭 ${bi('帶我回家', 'Take me home')}</a>
+        <a class="dbtn ghost" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">${bi('在地圖上看我的家', 'See my home on the map')}</a>
+        <button type="button" class="dbtn ghost" data-d="homeEdit">${bi('修改地址', 'Change the address')}</button>
+      </section>
+      <p class="note">地址只存在這支手機上。<br><span lang="en">The address is saved on this phone only.</span></p>`);
+    return;
+  }
+  const d = h || { town: '', address: '' };
+  homeEdit = true;
+  dailyPage('🏠', '帶我回家', 'Take me home', 'transport', `
+    <p class="dlead">請選鄉鎮，再打您家的地址。下面的地圖會顯示這個地址，請確認位置對不對。<br><span class="en" lang="en">Choose your township and type your home address. Check the map shows the right place.</span></p>
+    <section class="dcard">
+      <label class="flabel" for="home-town">${bi('鄉鎮（花蓮縣）', 'Township (Hualien)')}</label>
+      <button type="button" class="field" id="home-town" data-w="hometown" data-town="${d.town}"><span class="fi" aria-hidden="true">📍</span><span class="fv${d.town ? '' : ' ph'}" id="home-town-v">${d.town ? `${d.town} ${cityLabel(d.town, 'en')}` : '請選擇 Choose'}</span><span class="chev" aria-hidden="true"></span></button>
+      <label class="flabel" for="home-addr">${bi('地址（路名、門牌號碼）', 'Address (street and number)')}</label>
+      <div class="fwrap"><span class="fi" aria-hidden="true">🏠</span><input class="in" id="home-addr" maxlength="80" autocomplete="street-address" placeholder="例：中山路 123 號 · e.g. 123 Zhongshan Rd"></div>
+      <div class="addr-box">
+        <div class="addr-map" id="home-map"></div>
+        <p class="vnote addr-tip"></p>
+        <a class="addr-open" href="#" target="_blank" rel="noopener">${bi('在 Google 地圖打開', 'Open in Google Maps')} ↗</a>
+      </div>
+      <p class="ferr" id="home-err" role="alert" hidden></p>
+      <button type="button" class="dbtn big" data-d="homeSave">${bi('儲存我的家', 'Save my home')}</button>
+      ${h ? `<button type="button" class="dbtn ghost" data-d="homeCancel">${bi('取消', 'Cancel')}</button>` : ''}
+    </section>`);
+  document.getElementById('home-addr').value = d.address;
+  homeMap = addrMap.mount(document.getElementById('home-map'), { town: d.town, address: d.address }, {
+    onPin(town, address) { // only with a Google Maps key: the pin was moved
+      if (town) setHomeTown(town, true);
+      if (address) document.getElementById('home-addr').value = address;
+    },
+    onFound() {},
+  });
 }
 
-function setHomeHere() {
-  if (!('geolocation' in navigator)) { homeBusy = '這支手機無法取得位置。<br><span lang="en">This phone cannot get a location.</span>'; redraw(); return; }
-  homeBusy = '📍 正在取得位置…手機詢問時請按「允許」。<br><span lang="en">Finding your location… tap Allow if the phone asks.</span>';
-  redraw();
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      store.set('homeLoc', { lat: +pos.coords.latitude.toFixed(6), lng: +pos.coords.longitude.toFixed(6), at: Date.now() });
-      homeBusy = '';
-      showToast('已記下您的家\nHome saved'); say('已記下您的家');
-      if (currentView() === 'go-home') redraw();
-    },
-    () => {
-      homeBusy = '沒有取得位置。請在手機設定允許位置，再試一次。<br><span lang="en">Could not get the location. Allow location in your phone settings and try again.</span>';
-      if (currentView() === 'go-home') redraw();
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-  );
+function setHomeTown(town, quiet) {
+  const f = document.getElementById('home-town');
+  if (!f) return;
+  f.dataset.town = town;
+  const v = document.getElementById('home-town-v');
+  v.textContent = `${town} ${cityLabel(town, 'en')}`;
+  v.classList.remove('ph');
+  if (homeMap) { if (quiet) homeMap.adoptTown(town); else homeMap.setTown(town); }
 }
+
+function saveHome() {
+  const town = document.getElementById('home-town').dataset.town;
+  const address = document.getElementById('home-addr').value.trim();
+  if (!town) { dErr('home-err', '請選擇鄉鎮。', 'Please choose your township.'); return; }
+  if (address.length < 3) { dErr('home-err', '請填寫地址（路名和門牌號碼）。', 'Please type your address (street and number).'); return; }
+  store.set('homeAddr', { town, address, at: Date.now() });
+  store.set('homeLoc', null); // drop the old live-location home
+  homeEdit = false;
+  showToast('已記下您的家\nHome saved'); say('已記下您的家');
+  redraw();
+}
+
+document.addEventListener('click', (e) => {
+  const f = e.target.closest('[data-w="hometown"]');
+  if (f) openTownSheet('鄉鎮 · Township', f.dataset.town, (v) => setHomeTown(v));
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'home-addr' && homeMap) homeMap.setAddress(e.target.value);
+});
 
 /* ---------- 育 散步紀錄 ---------- */
 const WALK_GOAL = 30; // minutes a day
@@ -347,7 +387,7 @@ function homeNotice() {
 
 /* ---------- pages, events, timers ---------- */
 const DAILY_PAGES = {
-  'food-menu': renderMenu, 'food-water': renderWater, 'go-home': renderGoHome,
+  'food-menu': renderMenu, 'food-water': renderWater, 'go-home': () => { if (currentView() !== 'go-home') homeEdit = false; renderGoHome(); },
   'body-walk': renderWalk, 'body-tips': renderTips, 'fun-music': renderMusic, 'fun-games': renderGame,
   'med-pills': renderPills, 'med-visits': renderVisits,
 };
@@ -370,7 +410,9 @@ document.addEventListener('click', (e) => {
     case 'water+': { const w = getWater(); w.cups = Math.min(20, w.cups + 1); w.last = Date.now(); store.set('water', w); redraw(); break; }
     case 'water-': { const w = getWater(); w.cups = Math.max(0, w.cups - 1); store.set('water', w); redraw(); break; }
     case 'waterRemind': store.set('waterRemind', !store.get('waterRemind', true)); redraw(); break;
-    case 'homeSet': setHomeHere(); break;
+    case 'homeEdit': homeEdit = true; redraw(); break;
+    case 'homeCancel': homeEdit = false; redraw(); break;
+    case 'homeSave': saveHome(); break;
     case 'walk+': { const w = getWalks(); w[dToday()] = Math.min(600, (w[dToday()] || 0) + Number(d.n)); store.set('walks', w); redraw(); break; }
     case 'walk0': { const w = getWalks(); delete w[dToday()]; store.set('walks', w); redraw(); break; }
     case 'gameLevel': store.set('gameLevel', d.k); newGame(d.k); redraw(); break;

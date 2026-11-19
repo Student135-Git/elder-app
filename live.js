@@ -4,10 +4,11 @@
    住 Live / Reside — the elder's four buttons:
      1 打掃      2 租輔具 (pick one of five devices)
      3 陪伴散步  4 煮菜
-   All four book the same way: the phone asks for its location,
-   then offers a visit tomorrow at that service's time; 同意
-   unlocks 確認. A confirmed booking is saved as a normal
-   volunteer request, so volunteers in that township see it.
+   All four book the same way: the elder picks the township and
+   types the address (a Google map shows it), then gets a visit
+   tomorrow at that service's time; 同意 unlocks 確認.
+   No live location (GPS): it often pointed to the wrong place.
+   A confirmed booking is saved as a normal volunteer request, so volunteers in that township see it.
    Uses helpers from volunteer.js and the map data.
    ========================================================= */
 
@@ -35,30 +36,6 @@ const AID_ITEMS = [
   { id: 'quad', zh: '四腳拐杖', en: 'Four-point cane',
     svg: aidSvg('<path d="M15 8h14" stroke-width="4"/><path d="M26 8v26"/><path d="M14 34h24"/><path d="M14 34l-2 9"/><path d="M22 34l-1 9"/><path d="M30 34l1 9"/><path d="M38 34l2 9"/>') },
 ];
-
-/* ---------- which township is this location in? ---------- */
-const kmOrigin = HL_TO_LATLNG([0, 0]);
-const kmUnit = HL_TO_LATLNG([1, 1]);
-const latLngToKm = (lat, lng) => [(lng - kmOrigin.lng) / (kmUnit.lng - kmOrigin.lng), (lat - kmOrigin.lat) / (kmUnit.lat - kmOrigin.lat)];
-
-function inRing([x, y], ring) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-
-// The township the point is in; outside Hualien, the nearest one.
-function townAt(lat, lng) {
-  const p = latLngToKm(lat, lng);
-  const names = HL_TOWNS.map(([zh]) => zh);
-  const hit = names.find((t) => inRing(p, HL_SHAPES[t][0]));
-  if (hit) return { town: hit, inside: true };
-  const dist = (t) => Math.hypot(HL_GEO[t].lat - lat, (HL_GEO[t].lng - lng) * Math.cos((lat * Math.PI) / 180));
-  return { town: names.reduce((a, b) => (dist(b) < dist(a) ? b : a)), inside: false };
-}
 
 /* ---------- 住 page ---------- */
 const getBookings = () => { const b = store.get('bookings', []); return Array.isArray(b) ? b : []; };
@@ -91,8 +68,9 @@ function renderLive() {
   titleEl.focus({ preventScroll: true });
 }
 
-/* ---------- booking: location → schedule → 同意 → 確認 ---------- */
+/* ---------- booking: address → schedule → 同意 → 確認 ---------- */
 let booking = { step: 'idle', svc: null };
+let bookMap = null; // Google map under the address box
 
 function bookDay() {
   const t = Date.now() + DAY_MS; // the day after today
@@ -100,20 +78,43 @@ function bookDay() {
   return { ymd: ymd(t), zh: f('zh-TW'), en: f('en-US') };
 }
 
-function askLocation(kind) {
-  const base = { svc: booking.svc, item: booking.item };
-  booking = { ...base, step: 'locating' };
-  const redraw = () => { if (currentView() === 'home-' + kind) renderBook(kind); };
-  if (!('geolocation' in navigator)) { booking = { ...base, step: 'denied', code: 0 }; return; }
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      booking = { ...base, step: 'schedule', lat, lng, ...townAt(lat, lng) };
-      redraw();
+// The last address typed is offered again next time.
+const getMyAddr = () => { const a = store.get('myAddr', null); return a && typeof a === 'object' ? a : { town: '', address: '' }; };
+
+function addressForm(head) {
+  app.innerHTML = `${head}
+    <div class="vwrap">
+      <p class="vnote big">${B('請選鄉鎮，再打您家的地址。下面的地圖會顯示這個地址，請確認位置對不對。', 'Choose your township, then type your home address. The map below shows it — please check it is right.')}</p>
+      <section class="vcard">
+        <label class="flabel" for="bk-town">${B('鄉鎮（花蓮縣）', 'Township (Hualien)')}</label>
+        <button type="button" class="field" id="bk-town" data-w="bktown"><span class="fi" aria-hidden="true">📍</span><span class="fv${booking.town ? '' : ' ph'}" id="bk-town-v">${booking.town ? `${booking.town} ${cityLabel(booking.town, 'en')}` : '請選擇 Choose'}</span><span class="chev" aria-hidden="true"></span></button>
+        <label class="flabel gap" for="bk-addr">${B('地址（路名、門牌號碼）', 'Address (street and number)')}</label>
+        <div class="fwrap"><span class="fi" aria-hidden="true">🏠</span><input class="in" id="bk-addr" maxlength="80" autocomplete="street-address" placeholder="例：中山路 123 號 · e.g. 123 Zhongshan Rd"></div>
+        <div class="addr-box">
+          <div class="addr-map" id="bk-map"></div>
+          <p class="vnote addr-tip"></p>
+          <a class="addr-open" href="#" target="_blank" rel="noopener">${B('在 Google 地圖打開', 'Open in Google Maps')} ↗</a>
+        </div>
+      </section>
+      <p class="ferr" id="bk-err" role="alert" hidden></p>
+      <button type="button" class="btn-primary" data-live="addrNext" data-say="下一步">${B('下一步', 'Next')}</button>
+    </div>`;
+  document.getElementById('bk-addr').value = booking.address || '';
+  bookMap = addrMap.mount(document.getElementById('bk-map'), { town: booking.town, address: booking.address || '' }, {
+    onPin(town, address, ll) { // only with a Google Maps key: the elder moved the pin
+      booking.lat = ll.lat; booking.lng = ll.lng;
+      if (town && town !== booking.town) { booking.town = town; bookMap.adoptTown(town); showTown(); }
+      if (address) { booking.address = address; document.getElementById('bk-addr').value = address; }
     },
-    (err) => { booking = { ...base, step: 'denied', code: err.code }; redraw(); },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
-  );
+    onFound(ll) { booking.lat = ll.lat; booking.lng = ll.lng; },
+  });
+}
+
+function showTown() {
+  const v = document.getElementById('bk-town-v');
+  if (!v) return;
+  v.textContent = booking.town ? `${booking.town} ${cityLabel(booking.town, 'en')}` : '請選擇 Choose';
+  v.classList.toggle('ph', !booking.town);
 }
 
 function renderBook(kind) {
@@ -143,38 +144,10 @@ function renderBook(kind) {
       </div>`;
     return;
   }
-  if (booking.step === 'idle') askLocation(kind); // the phone now asks to allow location
+  if (booking.step === 'idle') { const a = getMyAddr(); booking = { ...booking, step: 'address', town: a.town, address: a.address, lat: null, lng: null }; }
   const head = item ? pageHead(item.svg, item.zh, item.en) : pageHead(s.icon, s.zh, s.en);
   const day = bookDay();
-
-  if (booking.step === 'locating') {
-    app.innerHTML = `${head}
-      <div class="vwrap">
-        <section class="vcard live-card">
-          <p class="live-big">📍 正在取得您的位置…</p>
-          <p class="live-en" lang="en">Finding your location…</p>
-          <p class="vnote big">手機問「要不要允許位置」時，請按<strong>允許</strong>，志工才找得到您。<br><span lang="en">When the phone asks about location, tap <strong>Allow</strong> so the volunteer can find you.</span></p>
-        </section>
-      </div>`;
-    return;
-  }
-
-  if (booking.step === 'denied') {
-    const why = booking.code === 1
-      ? ['沒有取得位置的許可。', 'Location permission was not given.']
-      : ['現在找不到您的位置。', 'Your location could not be found right now.'];
-    app.innerHTML = `${head}
-      <div class="vwrap">
-        <section class="vcard live-card">
-          <p class="live-big">${why[0]}</p>
-          <p class="live-en" lang="en">${why[1]}</p>
-          <p class="vnote big">請在手機設定允許這個網站使用位置，再試一次。<br><span lang="en">Allow location for this site in your phone settings and try again.</span></p>
-          <button type="button" class="btn-primary" data-live="retry">${B('再試一次', 'Try again')}</button>
-          ${item ? '' : `<a class="btn-ghost" href="#give-new" data-preset="${s.type}">${B('自己填地址', 'Type the address instead')}</a>`}
-        </section>
-      </div>`;
-    return;
-  }
+  if (booking.step === 'address') { addressForm(head); return; }
 
   if (booking.step === 'done') {
     app.innerHTML = `
@@ -184,7 +157,7 @@ function renderBook(kind) {
         <section class="vcard live-card">
           <p class="live-big">${day.zh}<br>${s.timeZh}</p>
           <p class="live-en" lang="en">${day.en}, ${s.timeEn}</p>
-          <p class="vnote big">📍 ${booking.town}・已記下您的位置 <span lang="en">${cityLabel(booking.town, 'en')} · your location is saved</span></p>
+          <p class="vnote big">📍 花蓮縣${booking.town} ${dEsc(booking.address)} <span lang="en">${cityLabel(booking.town, 'en')}</span></p>
         </section>
         ${shareNote()}
         <a class="btn-primary" href="#home">${B('回到居家', 'Back to Live / Reside')}</a>
@@ -204,7 +177,8 @@ function renderBook(kind) {
       <section class="vcard live-card">
         <p class="live-big">${zh}<br>請在這個時間準備好迎接我們的志工。</p>
         <p class="live-en" lang="en">${en} Please be ready to welcome our volunteer at that time.</p>
-        <p class="vnote big">📍 ${booking.town} <span lang="en">${cityLabel(booking.town, 'en')}</span>・${booking.inside ? '已取得您的位置' : '您的位置不在花蓮，先用最近的鄉鎮'} <span lang="en">${booking.inside ? 'location found' : 'outside Hualien — nearest township used'}</span></p>
+        <p class="vnote big">📍 花蓮縣${booking.town} ${dEsc(booking.address)} <span lang="en">${cityLabel(booking.town, 'en')}</span></p>
+        <button type="button" class="btn-ghost sm" data-live="editAddr">${B('修改地址', 'Change the address')}</button>
       </section>
       <button type="button" class="opt live-agree" data-live="agree" aria-pressed="false"><span class="live-box" aria-hidden="true"></span>${B('同意', 'I agree')}</button>
       <button type="button" class="btn-primary live-confirm" data-live="confirm" disabled>${B('確認', 'Confirm')}</button>
@@ -226,7 +200,7 @@ async function confirmBooking(btn) {
   const day = bookDay();
   const job = {
     id: String(now), types: [s.type], desc: item ? `租借：${item.zh} Rental: ${item.en}` : '', city: booking.town,
-    address: '定位位置 GPS location', lat: booking.lat, lng: booking.lng,
+    address: booking.address, lat: booking.lat ?? null, lng: booking.lng ?? null,
     hours: s.hours, start: s.start, people: 1, date: day.ymd,
     posted: now, expires: dateEnd(day.ymd), taken: [], owner: sessionName() || GUEST_NAME,
   };
@@ -264,7 +238,7 @@ function renderAids() {
 /* ---------- events (run before app.js follows the link) ---------- */
 document.addEventListener('click', (e) => {
   const t = e.target;
-  // 自己填地址: open the request form with that help already chosen.
+  // Open the request form with that help already chosen.
   const preset = t.closest('[data-preset]');
   if (preset) draft.types = [preset.dataset.preset];
   // A device was chosen: start a fresh rental booking for it.
@@ -275,7 +249,16 @@ document.addEventListener('click', (e) => {
   if (!el) return;
   const act = el.dataset.live;
   if (act === 'start') booking = { step: 'idle', svc: null }; // start fresh each time
-  else if (act === 'retry') { booking = { step: 'idle', svc: booking.svc, item: booking.item }; renderBook(booking.svc); }
+  else if (act === 'addrNext') {
+    booking.address = document.getElementById('bk-addr').value.trim();
+    const err = document.getElementById('bk-err');
+    const fail = (zh, en) => { err.hidden = false; err.innerHTML = B(zh, en); err.scrollIntoView({ block: 'center' }); };
+    if (!booking.town) return fail('請選擇鄉鎮。', 'Please choose your township.');
+    if (booking.address.length < 3) return fail('請填寫地址（路名和門牌號碼）。', 'Please type your address (street and number).');
+    store.set('myAddr', { town: booking.town, address: booking.address });
+    booking.step = 'schedule';
+    renderBook(booking.svc); window.scrollTo(0, 0);
+  } else if (act === 'editAddr') { booking.step = 'address'; renderBook(booking.svc); window.scrollTo(0, 0); }
   else if (act === 'agree') {
     const on = el.getAttribute('aria-pressed') !== 'true';
     el.setAttribute('aria-pressed', String(on));
@@ -283,4 +266,21 @@ document.addEventListener('click', (e) => {
     document.getElementById('live-hint').hidden = on;
     say(on ? '已同意' : '已取消同意');
   } else if (act === 'confirm') confirmBooking(el);
+});
+
+// Township field on the address step opens the 3D township picker.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-w="bktown"]')) return;
+  openTownSheet('鄉鎮 · Township', booking.town, (v) => {
+    if (v === booking.town) return;
+    booking.town = v; booking.lat = booking.lng = null;
+    showTown();
+    document.getElementById('bk-err').hidden = true;
+    if (bookMap) bookMap.setTown(v);
+  });
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'bk-addr') return;
+  booking.address = e.target.value; booking.lat = booking.lng = null;
+  if (bookMap) bookMap.setAddress(booking.address);
 });
