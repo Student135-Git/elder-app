@@ -422,6 +422,7 @@ document.addEventListener('click', (e) => {
     if (booking.address.length < 3) return fail('請填寫地址（路名和門牌號碼）。', 'Please type your address (street and number).');
     store.set('myAddr', { town: booking.town, address: booking.address });
     booking.step = 'schedule';
+    booking.date = null; booking.slot = null; // the elder always picks the day and time themselves
     again(); window.scrollTo(0, 0);
   } else if (act === 'editAddr') { booking.step = 'address'; again(); window.scrollTo(0, 0); }
   else if (act === 'day') { booking.date = el.dataset.k; booking.slot = null; const y = window.scrollY; again(); window.scrollTo(0, y); }
