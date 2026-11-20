@@ -83,6 +83,7 @@ function renderLive() {
     <ul class="actions live-main">
       ${row(AID_ITEMS[0].svg, '租輔具', 'Rent assistive devices', '助行器、拐杖、高腳椅…', '#home-aids')}
     </ul>
+    <div class="vwrap">${rulesNote(false)}</div>
     ${booked.length ? `<div class="vwrap live-booked"><h2 class="vh">${B('我的預約', 'My bookings')}</h2>${booked.map(giveCard).join('')}</div>` : ''}
     <div class="vwrap"><button type="button" class="btn-ghost sm live-privacy" data-live="privacy">${B('資料和位置設定', 'Data and location settings')}</button></div>`;
   titleEl.focus({ preventScroll: true });
@@ -150,12 +151,28 @@ function showTown() {
   v.classList.toggle('ph', !booking.town);
 }
 
+// Our booking rules, shown on the 住 page and before choosing a day.
+function rulesNote(full) {
+  const times = Object.values(SERVICES).map((x) => `${x.type === 'aid' ? '送輔具' : x.zh} ${x.slots.map((t) => `${periodOf(t[0]).zh} ${timeText(t)}`).join('、')}`).join('；');
+  const timesEn = Object.values(SERVICES).map((x) => `${x.type === 'aid' ? 'device delivery' : x.en.toLowerCase()} ${x.slots.map(timeText).join(' or ')}`).join('; ');
+  return `
+    <section class="rules">
+      <p class="rules-t">📋 ${B('預約規則', 'Booking rules')}</p>
+      <ul>
+        <li>${B(`請至少提前一天預約：最早明天，最晚 ${BOOK_DAYS} 天內。當天不能預約。`, `Book at least one day ahead: from tomorrow up to ${BOOK_DAYS} days ahead. Same-day bookings are not possible.`)}</li>
+        <li>${B(`服務時間是固定的：${times}。`, `Service times are fixed: ${timesEn}.`)}</li>
+        ${full ? `<li>${B('同一天的同一個時段只能預約一次。', 'Each time can be booked once per day.')}</li>
+        <li>${B('要取消，請到「居家」→「我的預約」刪除那筆預約。', 'To cancel, go to Live / Reside → My bookings and delete it.')}</li>` : ''}
+      </ul>
+    </section>`;
+}
+
 function scheduleView(head, s, item) {
   const days = nextDays();
-  if (!days.some((d) => d.ymd === booking.date)) booking.date = days[0].ymd;
+  if (!days.some((d) => d.ymd === booking.date)) booking.date = null; // no day is chosen for the elder
   const day = days.find((d) => d.ymd === booking.date);
   const taken = getJobs().filter((j) => getBookings().includes(j.id) && j.types[0] === s.type && j.date === booking.date).map((j) => j.start);
-  const chosen = s.slots.find((x) => x[0] === booking.slot && !taken.includes(x[0]));
+  const chosen = day && s.slots.find((x) => x[0] === booking.slot && !taken.includes(x[0]));
   const ready = Boolean(chosen);
   const periods = PERIODS.map((p) => {
     const list = s.slots.filter((x) => periodOf(x[0]) === p);
@@ -164,7 +181,7 @@ function scheduleView(head, s, item) {
         <p class="per-t"><span aria-hidden="true">${p.icon}</span> ${p.zh} <span class="en" lang="en">${p.en}</span></p>
         ${list.length ? list.map((x) => {
           const isTaken = taken.includes(x[0]);
-          return `<button type="button" class="slot" data-live="slot" data-k="${x[0]}" aria-pressed="${!isTaken && x[0] === booking.slot}" ${isTaken ? 'disabled' : ''}>
+          return `<button type="button" class="slot" data-live="slot" data-k="${x[0]}" aria-pressed="${Boolean(day) && !isTaken && x[0] === booking.slot}" ${isTaken || !day ? 'disabled' : ''}>
             <span class="slot-time">${timeText(x)}</span>${isTaken ? '<span class="slot-note">已預約 Booked</span>' : ''}</button>`;
         }).join('') : '<p class="per-none">沒有時段 <span class="en" lang="en">No times</span></p>'}
       </div>`;
@@ -172,12 +189,14 @@ function scheduleView(head, s, item) {
   const what = item ? `把「${item.zh}」送到您家` : s.zh;
   app.innerHTML = `${head}
     <div class="vwrap">
+      ${rulesNote(true)}
       <section class="vcard">
         <p class="flabel">${B('哪一天', 'Which day')}</p>
         <div class="days" role="group" aria-label="日期 Day">
           ${days.map((d) => `<button type="button" class="day" data-live="day" data-k="${d.ymd}" aria-pressed="${d.ymd === booking.date}"><span class="day-top">${d.top}</span><span class="day-md">${d.md}</span><span class="en" lang="en">${d.topEn}</span></button>`).join('')}
         </div>
         <p class="flabel gap">${B('什麼時間', 'What time')}</p>
+        ${day ? '' : `<p class="vnote">${B('請先選日期，再選時間。', 'Choose a day first, then a time.')}</p>`}
         <div class="pers">${periods}</div>
       </section>
       <section class="vcard live-card"${ready ? '' : ' hidden'}>
@@ -186,7 +205,7 @@ function scheduleView(head, s, item) {
         <p class="vnote big">📍 花蓮縣${booking.town} ${dEsc(booking.address)} <span lang="en">${cityLabel(booking.town, 'en')}</span></p>
         <button type="button" class="btn-ghost sm" data-live="editAddr">${B('修改地址', 'Change the address')}</button>
       </section>
-      <p class="vnote" id="slot-hint"${ready ? ' hidden' : ''}>${B('請選一個時間。', 'Please choose a time.')}</p>
+      <p class="vnote" id="slot-hint"${ready ? ' hidden' : ''}>${day ? B('請選一個時間。', 'Please choose a time.') : B('請選日期和時間。', 'Please choose a day and a time.')}</p>
       <button type="button" class="opt live-agree" data-live="agree" aria-pressed="false" ${ready ? '' : 'disabled'}><span class="live-box" aria-hidden="true"></span>${B('同意', 'I agree')}</button>
       <button type="button" class="btn-primary live-confirm" data-live="confirm" disabled>${B('確認', 'Confirm')}</button>
       <p class="vnote" id="live-hint"${ready ? '' : ' hidden'}>${B('先按「同意」，才能按「確認」。', 'Tap “I agree” first, then Confirm.')}</p>
