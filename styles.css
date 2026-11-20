@@ -1153,3 +1153,5 @@ main { overflow-x: clip; }
 .rules-t .bi { display: inline; } .rules-t .bi > .en { display: inline; margin-left: .3rem; }
 .rules ul { margin: 0; padding-left: 1.2rem; display: grid; gap: .45rem; }
 .rules li { font-size: 1rem; overflow-wrap: anywhere; }
+.book-day { margin: 0; padding: .6rem .8rem; border-radius: .9rem; background: color-mix(in srgb, var(--vb) 10%, var(--surface)); font-size: 1.25rem; font-weight: 700; }
+.book-day .bi { display: inline; } .book-day .bi > .en { display: block; font-size: .85rem; }

@@ -31,7 +31,7 @@ const SERVICES = {
   walk: { icon: '🚶', zh: '陪伴散步', en: 'A walk together', type: 'walk', login: true, slots: [['06:00', '07:00'], ['15:00', '16:00']] },
   rent: { icon: '🦯', zh: '租輔具', en: 'Device rental', type: 'aid', login: false, slots: [['10:00', '11:00']] },
 };
-const BOOK_DAYS = 7; // how far ahead the elder can book (from tomorrow)
+const BOOK_DAYS = 1; // every booking is for tomorrow
 
 // Simple line drawings (no emoji exists for these).
 const aidSvg = (body) => `<svg viewBox="0 0 48 48" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
@@ -158,7 +158,7 @@ function rulesNote(full) {
     <section class="rules">
       <p class="rules-t">📋 ${B('預約規則', 'Booking rules')}</p>
       <ul>
-        <li>${B(`請至少提前一天預約：最早明天，最晚 ${BOOK_DAYS} 天內。當天不能預約。`, `Book at least one day ahead: from tomorrow up to ${BOOK_DAYS} days ahead. Same-day bookings are not possible.`)}</li>
+        <li>${B('預約一律安排在明天。當天不能預約。', 'Every booking is for tomorrow. Same-day bookings are not possible.')}</li>
         <li>${B(`服務時間是固定的：${times}。`, `Service times are fixed: ${timesEn}.`)}</li>
         ${full ? `<li>${B('同一天的同一個時段只能預約一次。', 'Each time can be booked once per day.')}</li>
         <li>${B('要取消，請到「居家」→「我的預約」刪除那筆預約。', 'To cancel, go to Live / Reside → My bookings and delete it.')}</li>` : ''}
@@ -168,7 +168,7 @@ function rulesNote(full) {
 
 function scheduleView(head, s, item) {
   const days = nextDays();
-  if (!days.some((d) => d.ymd === booking.date)) booking.date = null; // no day is chosen for the elder
+  booking.date = days[0].ymd; // always tomorrow
   const day = days.find((d) => d.ymd === booking.date);
   const taken = getJobs().filter((j) => getBookings().includes(j.id) && j.types[0] === s.type && j.date === booking.date).map((j) => j.start);
   const chosen = day && s.slots.find((x) => x[0] === booking.slot && !taken.includes(x[0]));
@@ -190,12 +190,8 @@ function scheduleView(head, s, item) {
     <div class="vwrap">
       ${rulesNote(true)}
       <section class="vcard">
-        <p class="flabel">${B('哪一天', 'Which day')}</p>
-        <div class="days" role="group" aria-label="日期 Day">
-          ${days.map((d) => `<button type="button" class="day" data-live="day" data-k="${d.ymd}" aria-pressed="${d.ymd === booking.date}"><span class="day-top">${d.top}</span><span class="day-md">${d.md}</span><span class="en" lang="en">${d.topEn}</span></button>`).join('')}
-        </div>
-        <p class="flabel gap">${B('什麼時間', 'What time')}</p>
-        ${day ? '' : `<p class="vnote">${B('請先選日期，再選時間。', 'Choose a day first, then a time.')}</p>`}
+        <p class="book-day">📅 ${B(`明天 ${day.zh}`, `Tomorrow, ${day.en}`)}</p>
+        <p class="flabel gap">${B('選一個時間', 'Choose a time')}</p>
         <div class="pers">${periods}</div>
       </section>
       <section class="vcard live-card"${ready ? '' : ' hidden'}>
@@ -204,7 +200,7 @@ function scheduleView(head, s, item) {
         <p class="vnote big">📍 花蓮縣${booking.town} ${dEsc(booking.address)} <span lang="en">${cityLabel(booking.town, 'en')}</span></p>
         <button type="button" class="btn-ghost sm" data-live="editAddr">${B('修改地址', 'Change the address')}</button>
       </section>
-      <p class="vnote" id="slot-hint"${ready ? ' hidden' : ''}>${day ? B('請選一個時間。', 'Please choose a time.') : B('請選日期和時間。', 'Please choose a day and a time.')}</p>
+      <p class="vnote" id="slot-hint"${ready ? ' hidden' : ''}>${B('請選一個時間。', 'Please choose a time.')}</p>
       <button type="button" class="opt live-agree" data-live="agree" aria-pressed="false" ${ready ? '' : 'disabled'}><span class="live-box" aria-hidden="true"></span>${B('同意', 'I agree')}</button>
       <button type="button" class="btn-primary live-confirm" data-live="confirm" disabled>${B('確認', 'Confirm')}</button>
       <p class="vnote" id="live-hint"${ready ? '' : ' hidden'}>${B('先按「同意」，才能按「確認」。', 'Tap “I agree” first, then Confirm.')}</p>
@@ -422,10 +418,9 @@ document.addEventListener('click', (e) => {
     if (booking.address.length < 3) return fail('請填寫地址（路名和門牌號碼）。', 'Please type your address (street and number).');
     store.set('myAddr', { town: booking.town, address: booking.address });
     booking.step = 'schedule';
-    booking.date = null; booking.slot = null; // the elder always picks the day and time themselves
+    booking.slot = null; // the elder picks the time
     again(); window.scrollTo(0, 0);
   } else if (act === 'editAddr') { booking.step = 'address'; again(); window.scrollTo(0, 0); }
-  else if (act === 'day') { booking.date = el.dataset.k; booking.slot = null; const y = window.scrollY; again(); window.scrollTo(0, y); }
   else if (act === 'slot') {
     booking.slot = el.dataset.k;
     const y = window.scrollY; again(); window.scrollTo(0, y);
