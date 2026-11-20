@@ -18,8 +18,8 @@ const KINDWORLD = {
    3. Project Settings → API: copy the Project URL and the anon public key here.
    Leave empty and accounts stay on each phone. Never put the service_role key here. */
 const DATABASE = {
-  url: '',
-  anonKey: '',
+  url: 'https://yafzasdmoaztmcgrkyid.supabase.co',
+  anonKey: 'sb_publishable_Tzy5hhChBLjdCW9RKrmckg_7OO3GyLi', // public (publishable) key — safe in the app
 };
 
 /* Google Maps for the address box. Without a key you still get a Google map
