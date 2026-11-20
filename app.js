@@ -593,7 +593,7 @@ function renderView() {
   else if (view === 'vol-rank') renderRank();
   else if (view === 'vol-cert') renderCerts();
   else if (view === 'home') renderLive();
-  else if (/^home-(clean|walk|cook|rent)$/.test(view)) renderBook(view.slice(5));
+  else if (/^home-(clean|walk|rent)$/.test(view)) renderBook(view.slice(5));
   else if (view === 'home-aids') renderAids();
   else {
     const cat = CATEGORIES.find((c) => c.id === view && c.items);

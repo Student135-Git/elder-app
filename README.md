@@ -23,10 +23,13 @@ Motion: pages slide and fade between screens (direction follows forward / back),
 
 - **Home:** six buttons in order — 食 🍴, 衣 👕, 住 🏠, 行 🚗, 育 📖, 樂 🎵 (icon above the name) — and one red **119** button at the bottom that opens the phone dialler with 119 filled in. Everything fits one phone screen. Edit `CATEGORIES` in `app.js`.
 - **衣 means daily-use things:** its button is labelled 日用品 and opens the shop directly. 醫藥 is under 育 (`hidden: true` keeps a section without a home button).
-- **住 has four buttons:**
-  1. **打掃** (tomorrow 14:00–16:00), 3. **陪伴散步** (09:00–10:00) and 4. **煮菜** (10:00–12:00) all book the same way: the elder picks the township and types the address (a Google map shows it to check); then "…將安排在 (tomorrow), …"; **確認** only works after **同意** is on. Confirming saves a normal volunteer request in the township the location is in, so volunteers see it and can navigate there. The last address is filled in next time. No live location (GPS) is used anywhere. Times are in `SERVICES`.
-  2. **租輔具:** five devices with drawn icons — 助行器, 帶輪助行器, 高腳折疊椅, 單腳拐杖, 四腳拐杖 (`AID_ITEMS`). Tapping one books it the same way: a volunteer brings it tomorrow 10:00–11:00 (job type 送輔具).
-- Below them: 我的預約 (bookings made on this phone), 我的志工需求, 我想當志工.
+- **住 (`live.js`)** has two groups:
+  - **打掃和陪伴散步 (Cleaning and a walk together):** the elder must sign in first (account database when connected, otherwise this phone). Cleaning 14:30–16:30; walk 06:00–07:00 or 15:00–16:00.
+  - **租輔具 (Rent assistive devices):** five devices (助行器, 帶輪助行器, 高腳折疊椅, 單腳拐杖, 四腳拐杖); no sign-in; delivery 10:00–11:00.
+  - Every booking: township (3D map) + typed address checked on a Google map → day (next 7 days) → time, grouped as 早上 Morning / 中午 Noon / 下午 Afternoon / 晚上 Night → **同意** unlocks **確認**. A time already booked that day shows as 已預約. Times are in `SERVICES`, periods in `PERIODS`.
+  - 我的預約 lists the bookings made on this phone. 煮菜 and 我想當志工 were removed: volunteers use the KindWorld website.
+- **First visit:** a screen asks to save data on this phone (like cookies) and, optionally, to use location. With location allowed, the address step has **用我現在的位置找鄉鎮**: it picks the township and centres the map only if the phone's location is good enough (±300 m for the map, ±3 km for the township); the elder still types and checks the address, and volunteers navigate to the typed address. Change it later under 住 → 資料和位置設定.
+- **Creating elder accounts:** `node tools/elder-accounts.js add 王奶奶 1234`, `add-file elders.csv` (name,password per line), or `list`. Needs the account database (`database/accounts.sql` + `DATABASE` in `config.js`).
 
 ### 樂 → 花蓮活動 Hualien events (`events.js`, `events-data.js`)
 

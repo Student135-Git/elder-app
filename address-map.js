@@ -37,8 +37,9 @@ const addrMap = (() => {
     let shown = '';
     const show = () => {
       const exact = st.address.trim().length >= 2;
-      const q = st.town ? full(st.town, exact ? st.address.trim() : '') : '花蓮縣';
-      const z = exact ? 17 : st.town ? townZoom(st.town) : 9;
+      const pt = !exact && st.pt;
+      const q = pt ? `${st.pt.lat},${st.pt.lng}` : st.town ? full(st.town, exact ? st.address.trim() : '') : '花蓮縣';
+      const z = exact || pt ? 17 : st.town ? townZoom(st.town) : 9;
       const src = `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=${z}&hl=zh-TW&output=embed`;
       if (src !== shown) { frame.src = src; shown = src; }
     };
@@ -169,6 +170,7 @@ const addrMap = (() => {
       if (st.town !== lastTown) { lastTown = st.town; marker.setVisible(false); asked = ''; focusTown(); }
       if (from === 'typing') { clearTimeout(timer); timer = setTimeout(findTyped, 900); } else findTyped();
       if (st.lat != null && from === 'init') place({ lat: st.lat, lng: st.lng }, 17);
+      if (from === 'point' && st.pt) place(st.pt, 17);
     }
     update('init');
     // The pin landed in another township: outline that one, but keep the view on the pin.
@@ -226,7 +228,9 @@ const addrMap = (() => {
     refreshLink();
 
     return {
-      setTown(town) { st.town = town; st.lat = st.lng = null; refreshLink(); if (view) view.update('town'); },
+      setTown(town) { st.town = town; st.lat = st.lng = null; st.pt = null; refreshLink(); if (view) view.update('town'); },
+      // Centre on a found location (live location). The typed address still wins once there is one.
+      setPoint(lat, lng) { st.pt = { lat, lng }; if (view) view.update('point'); },
       setAddress(text) { st.address = text; st.lat = st.lng = null; refreshLink(); if (view) view.update('typing'); },
       adoptTown(town) { st.town = town; refreshLink(); if (view && view.adopt) view.adopt(); },
     };
