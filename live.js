@@ -114,12 +114,11 @@ const getMyAddr = () => { const a = store.get('myAddr', null); return a && typeo
 const headFor = (s, item) => (item ? pageHead(item.svg, item.zh, item.en) : pageHead(s.icon, s.zh, s.en));
 
 function addressForm(head) {
-  const loc = getConsent().location;
   app.innerHTML = `${head}
     <div class="vwrap">
       <p class="vnote big">${B('請選鄉鎮，再打您家的地址。下面的地圖會顯示這個地址，請確認位置對不對。', 'Choose your township, then type your home address. The map below shows it — please check it is right.')}</p>
       <section class="vcard">
-        ${loc ? `<button type="button" class="btn-ghost live-locate" data-live="locate">📍 ${B('用我現在的位置找鄉鎮', 'Use my location to find my township')}</button><p class="vnote" id="bk-loc" hidden></p>` : ''}
+        <button type="button" class="btn-ghost live-locate" data-live="locate">📍 ${B('用我現在的位置找鄉鎮', 'Use my location to find my township')}</button><p class="vnote" id="bk-loc" hidden></p>
         <label class="flabel" for="bk-town">${B('鄉鎮（花蓮縣）', 'Township (Hualien)')}</label>
         <button type="button" class="field" id="bk-town" data-w="bktown"><span class="fi" aria-hidden="true">📍</span><span class="fv${booking.town ? '' : ' ph'}" id="bk-town-v">${booking.town ? `${booking.town} ${cityLabel(booking.town, 'en')}` : '請選擇 Choose'}</span><span class="chev" aria-hidden="true"></span></button>
         <label class="flabel gap" for="bk-addr">${B('地址（路名、門牌號碼）', 'Address (street and number)')}</label>
@@ -410,7 +409,11 @@ document.addEventListener('click', (e) => {
   const again = () => renderBook(booking.svc);
   if (act === 'start') booking = { step: 'idle', svc: null }; // start fresh each time
   else if (act === 'privacy') showConsent();
-  else if (act === 'locate') locate();
+  else if (act === 'locate') {
+    const c = getConsent();
+    if (!c.location) store.set('consent', { ...c, asked: true, location: true, at: Date.now() });
+    locate();
+  }
   else if (act === 'addrNext') {
     booking.address = document.getElementById('bk-addr').value.trim();
     const err = document.getElementById('bk-err');
